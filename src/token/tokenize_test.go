@@ -6,7 +6,7 @@ import (
 
 func TestToken(t *testing.T) {
 	input := `
-	+  足 - 引 * 掛 / 割 　21 02356 ０９ １２０ ()（）
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）
 	`
 
 	tests := []struct {
@@ -14,13 +14,15 @@ func TestToken(t *testing.T) {
 		expectedLiteral   string
 	}{
 		{PLUS, "+"},
-		{PLUS, "足"},
+		{PLUS, "＋"},
 		{MINUS, "-"},
-		{MINUS, "引"},
+		{MINUS, "ー"},
 		{ASTERISK, "*"},
-		{ASTERISK, "掛"},
+		{ASTERISK, "＊"},
+		{ASTERISK, "×"},
 		{SLASH, "/"},
-		{SLASH, "割"},
+		{SLASH, "／"},
+		{SLASH, "÷"},
 		{NUMBER, "21"},
 		{NUMBER, "02356"},
 		{NUMBER, "０９"},

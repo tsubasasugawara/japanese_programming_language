@@ -23,6 +23,19 @@ func isNum(ch rune) bool {
 	return ('0' <= ch && ch <= '9') || ('０' <= ch && ch <= '９')
 }
 
+/*
+func isJapanese(ch rune) bool {
+	r := regexp.MustCompile("[亜-熙ぁ-んァ-ヶ]")
+	return r.MatchString(string(ch))
+}
+*/
+
+/*
+func isAlphabet(ch rune) bool {
+	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('ａ' <= ch && ch <= 'ｚ') || ('Ａ' <= ch && ch <= 'Ｚ')
+}
+*/
+
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.ch = 0
@@ -51,13 +64,13 @@ func Tokenize(input string) *Token {
 		l.skipSpecialChar()
 
 		switch l.ch {
-		case '+', '足':
+		case '+', '＋':
 			cur = newToken(PLUS, cur, string(l.ch))
-		case '-', '引':
+		case '-', 'ー':
 			cur = newToken(MINUS, cur, string(l.ch))
-		case '*', '掛':
+		case '*', '＊', '×':
 			cur = newToken(ASTERISK, cur, string(l.ch))
-		case '/', '割':
+		case '/', '／', '÷':
 			cur = newToken(SLASH, cur, string(l.ch))
 		case '(', '（':
 			cur = newToken(LPAREN, cur, string(l.ch))

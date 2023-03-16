@@ -5,19 +5,24 @@ type TokenKind int
 const (
 	NUMBER TokenKind = iota
 
-	IDENT
+	IDENT //識別子
 
-	PLUS
-	MINUS
-	SLASH
-	ASTERISK
+	PLUS     //+,＋
+	MINUS    // -, ー
+	SLASH    // /,／,÷
+	ASTERISK // *,＊,×
 
-	LPAREN
-	RPAREN
+	LPAREN // (,（
+	RPAREN // ),）
 
 	EOF
 	ILLEGAL
 )
+
+/*
+var keywords = map[string]TokenKind{
+}
+*/
 
 type Token struct {
 	Kind    TokenKind
@@ -35,3 +40,12 @@ func newNumberToken(cur *Token, literal string) *Token {
 	token := newToken(NUMBER, cur, literal)
 	return token
 }
+
+/*
+func lookUpIdent(key string) TokenKind {
+	if tok, ok := keywords[key]; ok {
+		return tok
+	}
+	return IDENT
+}
+*/
