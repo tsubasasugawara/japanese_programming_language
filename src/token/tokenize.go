@@ -43,7 +43,7 @@ func (l *Lexer) readChar() {
 		l.ch = l.input[l.readPosition]
 	}
 	l.position = l.readPosition
-	l.readPosition++
+	l.readPosition += 1
 }
 
 func (l *Lexer) readNum() string {
@@ -81,6 +81,7 @@ func Tokenize(input string) *Token {
 		default:
 			if isNum(l.ch) {
 				cur = newNumberToken(cur, l.readNum())
+				continue
 			} else {
 				cur = newToken(ILLEGAL, cur, "")
 			}
