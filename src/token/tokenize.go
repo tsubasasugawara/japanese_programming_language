@@ -72,9 +72,9 @@ func Tokenize(input string) *Token {
 			cur = newToken(ASTERISK, cur, string(l.ch))
 		case '/', '／', '÷':
 			cur = newToken(SLASH, cur, string(l.ch))
-		case '(', '（':
+		case '(', '（', '「':
 			cur = newToken(LPAREN, cur, string(l.ch))
-		case ')', '）':
+		case ')', '）', '」':
 			cur = newToken(RPAREN, cur, string(l.ch))
 		case 0:
 			cur = newToken(EOF, cur, "")

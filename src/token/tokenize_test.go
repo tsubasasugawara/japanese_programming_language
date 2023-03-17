@@ -6,7 +6,7 @@ import (
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」
 	`
 
 	tests := []struct {
@@ -31,6 +31,8 @@ func TestToken(t *testing.T) {
 		{RPAREN, ")"},
 		{LPAREN, "（"},
 		{RPAREN, "）"},
+		{LPAREN, "「"},
+		{RPAREN, "」"},
 		{EOF, ""},
 	}
 
