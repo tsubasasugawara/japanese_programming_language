@@ -76,8 +76,6 @@ func Tokenize(input string) *Token {
 			cur = newToken(LPAREN, cur, string(l.ch))
 		case ')', '）', '」':
 			cur = newToken(RPAREN, cur, string(l.ch))
-		case 0:
-			cur = newToken(EOF, cur, "")
 		default:
 			if isNum(l.ch) {
 				cur = newNumberToken(cur, l.readNum())
@@ -89,5 +87,6 @@ func Tokenize(input string) *Token {
 		l.readChar()
 	}
 
+	cur = newToken(EOF, cur, "")
 	return head.Next
 }
