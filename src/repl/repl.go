@@ -4,10 +4,18 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+
 	"jpl/token"
+	"jpl/parser"
 )
 
 const PROMPT = ">> "
+
+func printParserErrors(errors []string) {
+	for _, err := range errors {
+		fmt.Println(err)
+	}
+}
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
@@ -20,7 +28,14 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
+
 		token := token.Tokenize(line)
+
+		program, errors := parser.Parse(token)
+		if len(errors) > 0 {
+			printParserErrors(errors)
+			continue
+		}
 
 		for {
 			fmt.Printf("%+v\n", token)
@@ -31,5 +46,7 @@ func Start(in io.Reader, out io.Writer) {
 				token = token.Next
 			}
 		}
+
+		fmt.Println(program)
 	}
 }

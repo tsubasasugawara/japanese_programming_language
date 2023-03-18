@@ -10,18 +10,17 @@ import (
 
 type Parser struct {
 	curToken  *token.Token
-	peekToken *token.Token
 
-	errors []string
+	Errors []string
 }
 
 func newParser(head *token.Token) *Parser {
-	p := &Parser{curToken: head, peekToken: head.Next}
+	p := &Parser{curToken: head}
 	return p
 }
 
 func (p *Parser) nextToken() {
-	p.curToken, p.peekToken = p.peekToken, p.peekToken.Next
+	p.curToken = p.curToken.Next
 }
 
 func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
@@ -29,11 +28,11 @@ func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
 }
 
 func (p *Parser) consume(tokenKind token.TokenKind) bool {
-	if p.curToken.Kind == token.NUMBER ||
-		p.curToken.Kind == token.EOF ||
-		p.curToken.Kind != tokenKind {
-		return false
-	}
+	if p.curTokenIs(token.NUMBER) ||
+		p.curTokenIs(token.EOF) ||
+		!p.curTokenIs(tokenKind) {
+			return false
+		}
 
 	p.nextToken()
 	return true
@@ -45,13 +44,12 @@ func (p *Parser) expect(tokenKind token.TokenKind) bool {
 		return true
 	}
 
-	p.appendError()
+	p.appendError("Syntax Error in expect()")
 	return false
 }
 
-func (p *Parser) appendError() {
-	p.errors = append(p.errors, p.curToken.Literal)
-	p.nextToken()
+func (p *Parser) appendError(err string) {
+	p.Errors = append(p.Errors, err)
 }
 
 func (p *Parser) expr() *ast.Node {
@@ -92,24 +90,23 @@ func (p *Parser) primary() *ast.Node {
 	str := utils.ToLower(p.curToken.Literal)
 	num, err := strconv.Atoi(str)
 	if err != nil {
-		p.appendError()
+		p.appendError("Expect Number.")
 		return nil
 	}
-
+	p.nextToken()
 	return ast.NewNumberNode(num)
 }
 
-func Parse(head *token.Token) *ast.Node {
+func Parse(head *token.Token) (*ast.Program, []string) {
 	p := newParser(head)
+	program := ast.NewProgram()
 
-	var n *ast.Node
 	for !p.curTokenIs(token.EOF) {
 		node := p.expr()
 		if node != nil {
-			n.Next = node
-			n = n.Next
+			program.Nodes = append(program.Nodes, node)
 		}
 	}
 
-	return n.Next
+	return program, p.Errors
 }
