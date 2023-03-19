@@ -20,6 +20,7 @@ func TestEvaluator(t *testing.T) {
 		{"９÷３", 3},
 		{"9 * 9 * 0", 0},
 		{"(9 + 9) * 7", 126},
+		{"-9 * (-8)", 72},
 	}
 
 	for i, v := range tests {

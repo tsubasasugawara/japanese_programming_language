@@ -67,17 +67,26 @@ func (p *Parser) expr() *ast.Node {
 }
 
 func (p *Parser) mul() *ast.Node {
-	node := p.primary()
+	node := p.unary()
 
 	for {
 		if p.consume(token.ASTERISK) {
-			node = ast.NewNodeBinop(ast.MUL, node, p.primary())
+			node = ast.NewNodeBinop(ast.MUL, node, p.unary())
 		} else if p.consume(token.SLASH) {
-			node = ast.NewNodeBinop(ast.DIV, node, p.primary())
+			node = ast.NewNodeBinop(ast.DIV, node, p.unary())
 		} else {
 			return node
 		}
 	}
+}
+
+func (p *Parser) unary() *ast.Node {
+	if p.consume(token.PLUS) {
+		return ast.NewNodeBinop(ast.ADD, ast.NewNumberNode(0), p.primary())
+	} else if p.consume(token.MINUS) {
+		return ast.NewNodeBinop(ast.SUB, ast.NewNumberNode(0), p.primary())
+	}
+	return p.primary()
 }
 
 func (p *Parser) primary() *ast.Node {
