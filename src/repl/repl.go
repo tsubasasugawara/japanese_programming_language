@@ -7,6 +7,7 @@ import (
 
 	"jpl/token"
 	"jpl/parser"
+	"jpl/evaluator"
 )
 
 const PROMPT = ">> "
@@ -29,24 +30,15 @@ func Start(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 
-		token := token.Tokenize(line)
-
-		program, errors := parser.Parse(token)
+		head := token.Tokenize(line)
+		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			printParserErrors(errors)
 			continue
 		}
-
-		for {
-			fmt.Printf("%+v\n", token)
-
-			if token.Next == nil {
-				break
-			} else {
-				token = token.Next
-			}
+		for _, v := range program.Nodes {
+			o := evaluator.Eval(v)
+			fmt.Println(o.Inspect())
 		}
-
-		fmt.Println(program)
 	}
 }
