@@ -11,6 +11,15 @@ const (
 	MINUS    // -, ー
 	SLASH    // /,／,÷
 	ASTERISK // *,＊,×
+	ASSIGN // =
+
+	GT // <, ＜
+	LT // >, ＞
+	GE // <=, ＜＝
+	LE // >=, ＞＝
+
+	EQ // ==, ＝＝
+	NOT_EQ // !=, ！＝
 
 	LPAREN // (,（
 	RPAREN // ),）

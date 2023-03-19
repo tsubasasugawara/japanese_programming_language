@@ -6,7 +6,7 @@ import (
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 = ＝ == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝
 	`
 
 	tests := []struct {
@@ -33,6 +33,20 @@ func TestToken(t *testing.T) {
 		{RPAREN, "）"},
 		{LPAREN, "「"},
 		{RPAREN, "」"},
+		{ASSIGN, "="},
+		{ASSIGN, "＝＝"},
+		{EQ, "=="},
+		{EQ, "＝＝"},
+		{NOT_EQ, "!="},
+		{NOT_EQ, "！＝"},
+		{GT, "<"},
+		{GT, "＜"},
+		{GE, "<="},
+		{GE, "＜＝"},
+		{LT, ">"},
+		{LT, "＞"},
+		{LE, ">="},
+		{LE, "＞＝"},
 		{EOF, ""},
 	}
 
@@ -43,7 +57,7 @@ func TestToken(t *testing.T) {
 		}
 
 		if token.Literal != v.expectedLiteral {
-			t.Fatalf("test%d : got=%s expected=%s\n", i, token.Literal, v.expectedLiteral)
+			t.Fatalf("test%d : got=\"%s\" expected=\"%s\"\n", i, token.Literal, v.expectedLiteral)
 		}
 
 		if token.Next == nil {

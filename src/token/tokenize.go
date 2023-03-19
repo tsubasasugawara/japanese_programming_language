@@ -13,6 +13,14 @@ func newLexer(input string) *Lexer {
 	return l
 }
 
+func (l *Lexer) peekChar() rune {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
 func (l *Lexer) skipSpecialChar() {
 	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' {
 		l.readChar()
@@ -76,6 +84,34 @@ func Tokenize(input string) *Token {
 			cur = newToken(LPAREN, cur, string(l.ch))
 		case ')', '）', '」':
 			cur = newToken(RPAREN, cur, string(l.ch))
+		case '<', '＜':
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(GE, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(GT, cur, string(l.ch))
+			}
+		case '>', '＞':
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(LE, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(LT, cur, string(l.ch))
+			}
+		case '=', '＝':
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(EQ, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(ASSIGN, cur, string(l.ch))
+			}
+		case '!', '！':
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(NOT_EQ, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
+			}
 		default:
 			if isNum(l.ch) {
 				cur = newNumberToken(cur, l.readNum())
