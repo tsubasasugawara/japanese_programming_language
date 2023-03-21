@@ -136,6 +136,7 @@ func (p *Parser) primary() *ast.Node {
 	num, err := strconv.Atoi(str)
 	if err != nil {
 		p.appendError("Expect Number.")
+		p.nextToken()
 		return nil
 	}
 	p.nextToken()
