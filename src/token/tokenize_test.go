@@ -4,9 +4,48 @@ import (
 	"testing"
 )
 
+func tokenKindToString(kind TokenKind) string {
+	var res string
+	switch kind {
+	case PLUS:
+		res = "PLUS"
+	case MINUS:
+		res = "MINUS"
+	case ASTERISK:
+		res = "ASTERISK"
+	case SLASH:
+		res = "SLASH"
+	case NUMBER:
+		res = "NUMBER"
+	case LPAREN:
+		res = "LPAREN"
+	case RPAREN:
+		res = "RPAREN"
+	case ASSIGN:
+		res = "ASSIGN"
+	case EQ:
+		res = "EQ"
+	case NOT_EQ:
+		res = "NOT_EQ"
+	case GT:
+		res = "GT"
+	case GE:
+		res = "GE"
+	case LT:
+		res = "LT"
+	case LE:
+		res = "LE"
+	case EOF:
+		res = "EOF"
+	default:
+		res = "ILLEGAL"
+	}
+	return res
+}
+
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 = ＝ == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝
 	`
 
 	tests := []struct {
@@ -33,8 +72,6 @@ func TestToken(t *testing.T) {
 		{RPAREN, "）"},
 		{LPAREN, "「"},
 		{RPAREN, "」"},
-		{ASSIGN, "="},
-		{ASSIGN, "＝＝"},
 		{EQ, "=="},
 		{EQ, "＝＝"},
 		{NOT_EQ, "!="},
@@ -53,7 +90,7 @@ func TestToken(t *testing.T) {
 	token := Tokenize(input)
 	for i, v := range tests {
 		if token.Kind != v.expectedTokenKind {
-			t.Fatalf("test%d : got=%d expected=%d\n", i, token.Kind, v.expectedTokenKind)
+			t.Fatalf("test%d : got=%s expected=%s\n", i, tokenKindToString(token.Kind), tokenKindToString(v.expectedTokenKind))
 		}
 
 		if token.Literal != v.expectedLiteral {

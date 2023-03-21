@@ -9,6 +9,12 @@ const (
 	SUB // 引き算
 	MUL // 掛け算
 	DIV // 割り算
+	ASSIGN // 代入演算子
+
+	GT // 超過
+	GE // 以上
+	EQ // 等号
+	NOT_EQ // 不等号
 )
 
 type Node struct {

@@ -8,7 +8,7 @@ import (
 	"jpl/object"
 )
 
-func TestEvaluator(t *testing.T) {
+func TestCalc(t *testing.T) {
 	tests := []struct {
 		input string
 		expectNum int
@@ -37,3 +37,38 @@ func TestEvaluator(t *testing.T) {
 	}
 }
 
+func TestComparisonOperators(t *testing.T) {
+	tests := []struct {
+		input string
+		expect bool
+	} {
+		{"5 < 7", true},
+		{"5 <= 8", true},
+		{"5 <= 5", true},
+		{"7 > 5", true},
+		{"7 >= 5", true},
+		{"7 >= 7", true},
+		{"7 == 7", true},
+		{"8 != 9", true},
+		{"7 < 5", false},
+		{"5 < 5", false},
+		{"7 <= 5", false},
+		{"5 > 7", false},
+		{"5 > 5", false},
+		{"5 >= 7", false},
+		{"8 == 9", false},
+		{"9 != 9", false},
+	}
+	for i, v := range tests {
+		head := token.Tokenize(v.input)
+		program, errors := parser.Parse(head)
+		if len(errors) > 0 {
+			t.Fatalf("Error.\n")
+		}
+
+		o := Eval(program.Nodes[0])
+		if val := o.(*object.Boolean).Value; val != v.expect {
+			t.Fatalf("test%d : got=%t expect=%t", i, val, v.expect)
+		}
+	}
+}

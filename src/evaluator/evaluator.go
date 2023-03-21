@@ -12,18 +12,26 @@ func newError(format string, a ...interface{}) *object.Error {
 }
 
 func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right object.Object) object.Object {
-	leftVal := left.(*object.Integer).Value
-	rightVal := right.(*object.Integer).Value
+	lval := left.(*object.Integer).Value
+	rval := right.(*object.Integer).Value
 
 	switch nodeKind {
 	case ast.ADD:
-		return &object.Integer{Value: leftVal + rightVal}
+		return &object.Integer{Value: lval + rval}
 	case ast.SUB:
-		return &object.Integer{Value: leftVal - rightVal}
+		return &object.Integer{Value: lval - rval}
 	case ast.MUL:
-		return &object.Integer{Value: leftVal * rightVal}
+		return &object.Integer{Value: lval * rval}
 	case ast.DIV:
-		return &object.Integer{Value: leftVal / rightVal}
+		return &object.Integer{Value: lval / rval}
+	case ast.EQ:
+		return &object.Boolean{Value: lval == rval}
+	case ast.NOT_EQ:
+		return &object.Boolean{Value: lval != rval}
+	case ast.GT:
+		return &object.Boolean{Value: lval < rval}
+	case ast.GE:
+		return &object.Boolean{Value: lval <= rval}
 	default:
 		return newError("unknown operator")
 	}

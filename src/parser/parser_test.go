@@ -72,3 +72,42 @@ func TestUnaryOperator(t *testing.T) {
 		}
 	}
 }
+
+func TestComparisonOperators(t *testing.T) {
+	tests := []struct {
+		input string
+		nodeKind ast.NodeKind
+		lhs int
+		rhs int
+	} {
+		{"5 < 9", ast.GT, 5, 9},
+		{"５＜９", ast.GT, 5, 9},
+		{"5 <= 9", ast.GE, 5, 9},
+		{"５＜＝９", ast.GE, 5, 9},
+		{"9>5", ast.GT, 5, 9},
+		{"９＞５", ast.GT, 5, 9},
+		{"9>=5", ast.GE, 5, 9},
+		{"9＞＝5", ast.GE, 5, 9},
+		{"5==5", ast.EQ, 5, 5},
+		{"５＝＝５", ast.EQ, 5, 5},
+		{"5!=9", ast.NOT_EQ, 5, 9},
+		{"５！＝９", ast.NOT_EQ, 5, 9},
+	}
+
+	for i, v := range tests {
+		token := token.Tokenize(v.input)
+		program, _ := Parse(token)
+
+		for _, node := range program.Nodes {
+			if node.NodeKind != v.nodeKind {
+				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
+			}
+			if node.Lhs == nil || node.Lhs.Num != v.lhs {
+				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
+			}
+			if node.Rhs == nil || node.Rhs.Num != v.rhs {
+				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+			}
+		}
+	}
+}

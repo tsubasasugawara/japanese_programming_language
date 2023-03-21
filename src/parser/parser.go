@@ -53,6 +53,42 @@ func (p *Parser) appendError(err string) {
 }
 
 func (p *Parser) expr() *ast.Node {
+	return p.equality()
+}
+
+func (p *Parser) equality() *ast.Node {
+	node := p.relational()
+
+	for {
+		if p.consume(token.EQ) {
+			node = ast.NewNodeBinop(ast.EQ, node, p.relational())
+		} else if p.consume(token.NOT_EQ) {
+			node = ast.NewNodeBinop(ast.NOT_EQ, node, p.relational())
+		} else {
+			return node
+		}
+	}
+}
+
+func (p *Parser) relational() *ast.Node {
+	node := p.add()
+
+	for {
+		if p.consume(token.GT) {
+			node = ast.NewNodeBinop(ast.GT, node, p.add())
+		} else if p.consume(token.GE) {
+			node = ast.NewNodeBinop(ast.GE, node, p.add())
+		} else if p.consume(token.LT) {
+			node = ast.NewNodeBinop(ast.GT, p.add(), node)
+		} else if p.consume(token.LE) {
+			node = ast.NewNodeBinop(ast.GE, p.add(), node)
+		} else {
+			return node
+		}
+	}
+}
+
+func (p *Parser) add() *ast.Node {
 	node := p.mul()
 
 	for {

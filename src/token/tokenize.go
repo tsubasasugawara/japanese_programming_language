@@ -103,7 +103,7 @@ func Tokenize(input string) *Token {
 				cur = newToken(EQ, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(ASSIGN, cur, string(l.ch))
+				cur = newToken(ILLEGAL, cur, string(l.ch))
 			}
 		case '!', '！':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
@@ -112,6 +112,8 @@ func Tokenize(input string) *Token {
 			} else {
 				cur = newToken(ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
 			}
+		case 0:
+			cur = newToken(EOF, cur, "")
 		default:
 			if isNum(l.ch) {
 				cur = newNumberToken(cur, l.readNum())
