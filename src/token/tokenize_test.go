@@ -37,6 +37,8 @@ func tokenKindToString(kind TokenKind) string {
 		res = "LE"
 	case EOF:
 		res = "EOF"
+	case IDENT:
+		res = "IDENT"
 	default:
 		res = "ILLEGAL"
 	}
@@ -45,7 +47,7 @@ func tokenKindToString(kind TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界
 	`
 
 	tests := []struct {
@@ -84,6 +86,15 @@ func TestToken(t *testing.T) {
 		{LT, "＞"},
 		{LE, ">="},
 		{LE, "＞＝"},
+		{IDENT, "あ"},
+		{IDENT, "日"},
+		{IDENT, "a"},
+		{IDENT, "z"},
+		{IDENT, "ア"},
+		{IDENT, "A"},
+		{IDENT, "Z"},
+		{IDENT, "こんにちは"},
+		{IDENT, "世界"},
 		{EOF, ""},
 	}
 

@@ -111,3 +111,32 @@ func TestComparisonOperators(t *testing.T) {
 		}
 	}
 }
+
+func TestIdentifier(t *testing.T) {
+	tests := []struct {
+		input string
+		nodeKind ast.NodeKind
+		lhs string
+		rhs int
+	} {
+		{"こ=5", ast.ASSIGN, "こ", 5},
+		{"a＝10", ast.ASSIGN, "a", 10},
+	}
+
+	for i, v := range tests {
+		token := token.Tokenize(v.input)
+		program, _ := Parse(token)
+
+		for _, node := range program.Nodes {
+			if node.NodeKind != v.nodeKind {
+				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
+			}
+			if node.Lhs == nil || node.Lhs.Ident != v.lhs{
+				t.Fatalf("test%d(lhs) : got=%s expect=%s\n", i, node.Lhs.Ident, v.lhs)
+			}
+			if node.Rhs == nil || node.Rhs.Num != v.rhs {
+				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+			}
+		}
+	}
+}

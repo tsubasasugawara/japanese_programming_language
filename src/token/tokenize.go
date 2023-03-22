@@ -1,5 +1,10 @@
 package token
 
+import (
+	"regexp"
+	"unicode"
+)
+
 type Lexer struct {
 	input        []rune
 	position     int
@@ -31,18 +36,33 @@ func isNum(ch rune) bool {
 	return ('0' <= ch && ch <= '9') || ('０' <= ch && ch <= '９')
 }
 
-/*
-func isJapanese(ch rune) bool {
-	r := regexp.MustCompile("[亜-熙ぁ-んァ-ヶ]")
-	return r.MatchString(string(ch))
+func isHiragana(ch rune) bool {
+	match, err := regexp.MatchString("[\u3041-\u3096]", string(ch))
+	if err != nil {
+		panic(err)
+	}
+	return match
 }
-*/
 
-/*
+func isKatakana(ch rune) bool {
+	match, err := regexp.MatchString("[\u30a1-\u30fc]", string(ch))
+	if err != nil {
+		panic(err)
+	}
+	return match
+}
+
+func isKanji(ch rune) bool {
+	return unicode.In(ch, unicode.Han)
+}
+
+func isJapanese(ch rune) bool {
+	return isHiragana(ch) || isKatakana(ch) || isKanji(ch)
+}
+
 func isAlphabet(ch rune) bool {
 	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('ａ' <= ch && ch <= 'ｚ') || ('Ａ' <= ch && ch <= 'Ｚ')
 }
-*/
 
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -57,6 +77,19 @@ func (l *Lexer) readChar() {
 func (l *Lexer) readNum() string {
 	position := l.position
 	for isNum(l.ch) {
+		l.readChar()
+	}
+	return string(l.input[position:l.position])
+}
+
+func (l *Lexer) readString() string {
+	position := l.position
+	if !isAlphabet(l.ch) && !isJapanese(l.ch) {
+		return ""
+	}
+	l.readChar()
+
+	for isAlphabet(l.ch) || isJapanese(l.ch) || isNum(l.ch) || l.ch == '_' || l.ch == '＿' {
 		l.readChar()
 	}
 	return string(l.input[position:l.position])
@@ -103,7 +136,7 @@ func Tokenize(input string) *Token {
 				cur = newToken(EQ, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(ILLEGAL, cur, string(l.ch))
+				cur = newToken(ASSIGN, cur, string(l.ch))
 			}
 		case '!', '！':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
@@ -117,6 +150,9 @@ func Tokenize(input string) *Token {
 		default:
 			if isNum(l.ch) {
 				cur = newNumberToken(cur, l.readNum())
+				continue
+			} else if isJapanese(l.ch) || isAlphabet(l.ch) {
+				cur = newToken(IDENT, cur, l.readString())
 				continue
 			} else {
 				cur = newToken(ILLEGAL, cur, "")

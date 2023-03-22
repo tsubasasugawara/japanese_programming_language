@@ -52,8 +52,22 @@ func (p *Parser) appendError(err string) {
 	p.Errors = append(p.Errors, err)
 }
 
+func (p *Parser) program() *ast.Node {
+	return p.expr()
+}
+
 func (p *Parser) expr() *ast.Node {
-	return p.equality()
+	return p.assign()
+}
+
+func (p *Parser) assign() *ast.Node {
+	node := p.equality()
+
+	if p.consume(token.ASSIGN) {
+		node = ast.NewNodeBinop(ast.ASSIGN, node, p.assign())
+	}
+
+	return node
 }
 
 func (p *Parser) equality() *ast.Node {
@@ -132,6 +146,12 @@ func (p *Parser) primary() *ast.Node {
 		return node
 	}
 
+	if p.curTokenIs(token.IDENT) {
+		node := ast.NewIdentNode(p.curToken.Literal)
+		p.nextToken()
+		return node
+	}
+
 	str := utils.ToLower(p.curToken.Literal)
 	num, err := strconv.Atoi(str)
 	if err != nil {
@@ -148,7 +168,7 @@ func Parse(head *token.Token) (*ast.Program, []string) {
 	program := ast.NewProgram()
 
 	for !p.curTokenIs(token.EOF) {
-		node := p.expr()
+		node := p.program()
 		if node != nil {
 			program.Nodes = append(program.Nodes, node)
 		}

@@ -30,7 +30,8 @@ func TestCalc(t *testing.T) {
 			t.Fatalf("Error.\n")
 		}
 
-		o := Eval(program.Nodes[0])
+		env := object.NewEnvironment()
+		o := Eval(program.Nodes[0], env)
 		if val := o.(*object.Integer).Value; val != v.expectNum {
 			t.Fatalf("test%d : got=%d expect=%d", i, val, v.expectNum)
 		}
@@ -66,9 +67,40 @@ func TestComparisonOperators(t *testing.T) {
 			t.Fatalf("Error.\n")
 		}
 
-		o := Eval(program.Nodes[0])
+		env := object.NewEnvironment()
+		o := Eval(program.Nodes[0], env)
 		if val := o.(*object.Boolean).Value; val != v.expect {
-			t.Fatalf("test%d : got=%t expect=%t", i, val, v.expect)
+			t.Fatalf("test%d : got=%t expect=%t\n", i, val, v.expect)
+		}
+	}
+}
+
+
+func TestIdentifier(t *testing.T) {
+	tests := []struct{
+		input string
+		expect int
+	}{
+		{"a = 5 a", 5},
+		{"test=10 test", 10},
+		{"test1=10 test1", 10},
+		{"こんにちは＝１００ こんにちは", 100},
+		{"世界 ＝ ２３８ 世界", 238},
+		{"ワールド ＝ ２３５ ワールド", 235},
+	}
+
+	for i, v := range tests {
+		head := token.Tokenize(v.input)
+		program, errors := parser.Parse(head)
+		if len(errors) > 0 {
+			t.Fatalf("Error.\n")
+		}
+
+		env := object.NewEnvironment()
+		Eval(program.Nodes[0], env)
+		e2 := Eval(program.Nodes[1], env)
+		if val := e2.(*object.Integer).Value; val != v.expect {
+			t.Fatalf("test%d : got=%d expect=%d\n", i, val, v.expect)
 		}
 	}
 }

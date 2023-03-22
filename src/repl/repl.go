@@ -8,6 +8,7 @@ import (
 	"jpl/token"
 	"jpl/parser"
 	"jpl/evaluator"
+	"jpl/object"
 )
 
 const PROMPT = ">> "
@@ -20,6 +21,8 @@ func printParserErrors(errors []string) {
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+
+	env := object.NewEnvironment()
 
 	for {
 		fmt.Print(PROMPT)
@@ -37,7 +40,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 		for _, v := range program.Nodes {
-			o := evaluator.Eval(v)
+			o := evaluator.Eval(v, env)
 			fmt.Println(o.Inspect())
 		}
 	}

@@ -5,6 +5,8 @@ type NodeKind int
 const (
 	NUMBER NodeKind = iota
 
+	IDENT // 識別子
+
 	ADD // 足し算
 	SUB // 引き算
 	MUL // 掛け算
@@ -17,6 +19,12 @@ const (
 	NOT_EQ // 不等号
 )
 
+type RuntimeType int
+
+const (
+	INTEGER RuntimeType = iota
+)
+
 type Node struct {
 	NodeKind NodeKind
 	Next     *Node
@@ -24,7 +32,10 @@ type Node struct {
 	Lhs *Node
 	Rhs *Node
 
+	Type RuntimeType
+
 	Num int // NUMBERの時に値を格納する
+	Ident string // 識別子を格納する
 }
 
 func NewNode(nodeKind NodeKind) *Node {
@@ -42,5 +53,11 @@ func NewNodeBinop(nodeKind NodeKind, lhs *Node, rhs *Node) *Node {
 	n := NewNode(nodeKind)
 	n.Lhs = lhs
 	n.Rhs = rhs
+	return n
+}
+
+func NewIdentNode(ident string) *Node {
+	n := NewNode(IDENT)
+	n.Ident = ident
 	return n
 }

@@ -37,14 +37,24 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 	}
 }
 
-func Eval(node *ast.Node) object.Object {
+func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
+	case ast.ASSIGN:
+		val := Eval(node.Rhs, env)
+		env.Set(node.Lhs.Ident, val)
+		return &object.Null{}
+	case ast.IDENT:
+		object, ok := env.Get(node.Ident)
+		if !ok {
+			return newError("identifier not found")
+		}
+		return object
 	case ast.NUMBER:
 		return &object.Integer{Value: node.Num}
 	}
 
-	lhs := Eval(node.Lhs)
-	rhs := Eval(node.Rhs)
+	lhs := Eval(node.Lhs, env)
+	rhs := Eval(node.Rhs, env)
 
 	return evalIntegerExpression(node.NodeKind, lhs, rhs)
 }
