@@ -53,7 +53,17 @@ func (p *Parser) appendError(err string) {
 }
 
 func (p *Parser) program() *ast.Node {
-	return p.expr()
+	return p.stmt()
+}
+
+func (p *Parser) stmt() *ast.Node {
+	node := p.expr()
+
+	if p.consume(token.RETURN) {
+		node = ast.NewNodeBinop(ast.RETURN, node, nil)
+	}
+
+	return node
 }
 
 func (p *Parser) expr() *ast.Node {

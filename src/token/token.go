@@ -24,14 +24,15 @@ const (
 	LPAREN // (,（
 	RPAREN // ),）
 
+	RETURN
+
 	EOF
 	ILLEGAL
 )
 
-/*
 var keywords = map[string]TokenKind{
+	"戻す" : RETURN,
 }
-*/
 
 type Token struct {
 	Kind    TokenKind
@@ -50,11 +51,9 @@ func newNumberToken(cur *Token, literal string) *Token {
 	return token
 }
 
-/*
 func lookUpIdent(key string) TokenKind {
 	if tok, ok := keywords[key]; ok {
 		return tok
 	}
 	return IDENT
 }
-*/

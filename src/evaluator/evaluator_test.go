@@ -104,3 +104,26 @@ func TestIdentifier(t *testing.T) {
 		}
 	}
 }
+
+func TestReturnStatement(t *testing.T) {
+	tests := []struct {
+		input string
+		expect int
+	} {
+		{"5+5 戻す", 10},
+	}
+
+	for i, v := range tests {
+		head := token.Tokenize(v.input)
+		program, errors := parser.Parse(head)
+		if len(errors) > 0 {
+			t.Fatalf("Error.\n")
+		}
+
+		env := object.NewEnvironment()
+		e := Eval(program.Nodes[0], env)
+		if val := e.(*object.Integer).Value; val != v.expect {
+			t.Fatalf("test%d : got=%d expect=%d\n", i, val, v.expect)
+		}
+	}
+}

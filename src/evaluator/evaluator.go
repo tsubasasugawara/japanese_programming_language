@@ -11,6 +11,13 @@ func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
+func isError(obj object.Object) bool {
+	if obj != nil {
+		return obj.Type() == object.ERROR
+	}
+	return false
+}
+
 func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right object.Object) object.Object {
 	lval := left.(*object.Integer).Value
 	rval := right.(*object.Integer).Value
@@ -51,6 +58,8 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 		return object
 	case ast.NUMBER:
 		return &object.Integer{Value: node.Num}
+	case ast.RETURN:
+		return Eval(node.Lhs, env)
 	}
 
 	lhs := Eval(node.Lhs, env)

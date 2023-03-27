@@ -152,7 +152,9 @@ func Tokenize(input string) *Token {
 				cur = newNumberToken(cur, l.readNum())
 				continue
 			} else if isJapanese(l.ch) || isAlphabet(l.ch) {
-				cur = newToken(IDENT, cur, l.readString())
+				str := l.readString()
+				kind := lookUpIdent(str)
+				cur = newToken(kind, cur, str)
 				continue
 			} else {
 				cur = newToken(ILLEGAL, cur, "")

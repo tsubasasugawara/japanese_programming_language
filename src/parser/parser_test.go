@@ -140,3 +140,27 @@ func TestIdentifier(t *testing.T) {
 		}
 	}
 }
+
+func TestReturnStatement(t *testing.T) {
+	tests := []struct {
+		input string
+		nodeKind ast.NodeKind
+		lhs ast.NodeKind
+	} {
+		{"5+5 戻す", ast.RETURN, ast.ADD},
+	}
+
+	for i, v := range tests {
+		token := token.Tokenize(v.input)
+		program, _ := Parse(token)
+
+		for _, node := range program.Nodes {
+			if node.NodeKind != v.nodeKind {
+				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
+			}
+			if node.Lhs == nil || node.Lhs.NodeKind != v.lhs{
+				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.NodeKind, v.lhs)
+			}
+		}
+	}
+}

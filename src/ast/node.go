@@ -17,6 +17,8 @@ const (
 	GE // 以上
 	EQ // 等号
 	NOT_EQ // 不等号
+
+	RETURN // 戻す(return)
 )
 
 type RuntimeType int
