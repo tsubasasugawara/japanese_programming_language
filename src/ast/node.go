@@ -23,6 +23,8 @@ const (
 	ELSE // それ以外
 	THEN // ならば
 	FOR // 繰り返す
+
+	BLOCK
 )
 
 type RuntimeType int
@@ -41,6 +43,8 @@ type Node struct {
 	Condition *Node
 	Then *Node
 	Else *Node
+
+	Stmts []*Node
 
 	Type RuntimeType
 

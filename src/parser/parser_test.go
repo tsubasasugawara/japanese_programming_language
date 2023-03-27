@@ -27,8 +27,8 @@ func TestOperator(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		token := token.Tokenize(v.input)
-		program, _ := Parse(token)
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
 
 		for _, node := range program.Nodes {
 			if node.NodeKind != v.nodeKind {
@@ -56,8 +56,8 @@ func TestUnaryOperator(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		token := token.Tokenize(v.input)
-		program, _ := Parse(token)
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
 
 		for _, node := range program.Nodes {
 			if node.NodeKind != v.nodeKind {
@@ -95,8 +95,8 @@ func TestComparisonOperators(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		token := token.Tokenize(v.input)
-		program, _ := Parse(token)
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
 
 		for _, node := range program.Nodes {
 			if node.NodeKind != v.nodeKind {
@@ -124,8 +124,8 @@ func TestIdentifier(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		token := token.Tokenize(v.input)
-		program, _ := Parse(token)
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
 
 		for _, node := range program.Nodes {
 			if node.NodeKind != v.nodeKind {
@@ -151,8 +151,8 @@ func TestReturnStatement(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		token := token.Tokenize(v.input)
-		program, _ := Parse(token)
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
 
 		for _, node := range program.Nodes {
 			if node.NodeKind != v.nodeKind {
@@ -167,8 +167,8 @@ func TestReturnStatement(t *testing.T) {
 
 func TestIfStatement(t *testing.T) {
 	input := "もし 5 == 5 ならば 10 戻す"
-	token := token.Tokenize(input)
-	program, _ := Parse(token)
+	head:= token.Tokenize(input)
+	program, _ := Parse(head)
 
 	node := program.Nodes[0]
 	if node.NodeKind != ast.IF{
@@ -184,8 +184,8 @@ func TestIfStatement(t *testing.T) {
 
 func TestIfElseStatement(t *testing.T) {
 	input := "もし 5 != 5 ならば 10 戻す それ以外 15 戻す"
-	token := token.Tokenize(input)
-	program, _ := Parse(token)
+	head := token.Tokenize(input)
+	program, _ := Parse(head)
 
 	node := program.Nodes[0]
 	if node.NodeKind != ast.IF{
@@ -207,8 +207,8 @@ func TestForStatement(t *testing.T) {
 	a = 1
 	a < 5 ならば 繰り返す a = a + 1
 	`
-	token := token.Tokenize(input)
-	program, _ := Parse(token)
+	head := token.Tokenize(input)
+	program, _ := Parse(head)
 
 	node := program.Nodes[1]
 	if node.NodeKind != ast.FOR {
@@ -219,5 +219,27 @@ func TestForStatement(t *testing.T) {
 	}
 	if node.Then.NodeKind != ast.ASSIGN {
 		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.ASSIGN)
+	}
+}
+
+func TestBlockStatement(t *testing.T) {
+	input := `
+	{
+		a = 1
+		a = a + 1
+		もし a == 4 ならば
+			a = a + 10
+		それ以外
+			a = a +1
+	}`
+	head := token.Tokenize(input)
+	program, _ := Parse(head)
+
+	node := program.Nodes[0]
+	if node.NodeKind != ast.BLOCK {
+		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.BLOCK)
+	}
+	if len(node.Stmts) != 3 {
+		t.Fatalf("got=%d expect=%d\n", len(node.Stmts), 3)
 	}
 }

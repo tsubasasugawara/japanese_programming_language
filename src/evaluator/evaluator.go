@@ -92,6 +92,24 @@ func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
 	}
 }
 
+func evalBlock(node *ast.Node, env *object.Environment) object.Object {
+	var res object.Object
+
+	for _, stmt:= range node.Stmts {
+		res = Eval(stmt, env)
+
+		if res == nil {
+			continue
+		}
+
+		if rt := res.Type(); rt == object.RETURN_VALUE || rt == object.ERROR {
+			return res
+		}
+	}
+
+	return res
+}
+
 func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
 	case ast.ASSIGN:
@@ -116,6 +134,9 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 		return evalIfStatement(node, env)
 	case ast.FOR:
 		return evalForStatement(node, env)
+	case ast.BLOCK:
+		blockEnv := object.NewEnclosedEnvironment(env)
+		return evalBlock(node, blockEnv)
 	}
 
 	lhs := Eval(node.Lhs, env)

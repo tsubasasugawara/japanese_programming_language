@@ -23,6 +23,8 @@ const (
 
 	LPAREN // (,（
 	RPAREN // ),）
+	LBRACE // {, ｛
+	RBRACE // }, ｝
 
 	RETURN
 	IF

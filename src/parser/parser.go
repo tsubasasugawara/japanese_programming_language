@@ -67,6 +67,12 @@ func (p *Parser) stmt() *ast.Node {
 			node.Else = p.stmt()
 		}
 		return node
+	} else if p.consume(token.LBRACE) {
+		node := ast.NewNode(ast.BLOCK)
+		for !p.consume(token.RBRACE) {
+			node.Stmts = append(node.Stmts, p.stmt())
+		}
+		return node
 	}
 
 	node := p.expr()

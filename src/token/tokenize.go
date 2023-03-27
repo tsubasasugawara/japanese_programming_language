@@ -117,6 +117,10 @@ func Tokenize(input string) *Token {
 			cur = newToken(LPAREN, cur, string(l.ch))
 		case ')', '）', '」':
 			cur = newToken(RPAREN, cur, string(l.ch))
+		case '{', '｛':
+			cur = newToken(LBRACE, cur, string(l.ch))
+		case '}', '｝':
+			cur = newToken(RBRACE, cur, string(l.ch))
 		case '<', '＜':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
 				cur = newToken(GE, cur, string([]rune{l.ch, ch}))

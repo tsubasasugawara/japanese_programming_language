@@ -25,6 +25,18 @@ func (e *Environment) Get(name string) (Object, bool) {
 }
 
 func (e *Environment) Set(name string, val Object) Object {
-	e.store[name] = val
+	curEnv := e
+	for {
+		_, ok := curEnv.store[name]
+		if ok {
+			break
+		}
+		if curEnv.outer == nil {
+			curEnv = e
+			break
+		}
+		curEnv = curEnv.outer
+	}
+	curEnv.store[name] = val
 	return val
 }

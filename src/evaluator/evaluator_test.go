@@ -196,3 +196,32 @@ func TestForStatement(t *testing.T) {
 		t.Fatalf("got=%s expect=%s\n", val, "5")
 	}
 }
+
+func TestBlockStatement(t *testing.T) {
+	input := `
+	a = 0
+	{
+		a = 5
+		b = 9
+		b 戻す
+	}
+	a 戻す
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v1 := Eval(program.Nodes[1], env)
+	v2 := Eval(program.Nodes[2], env)
+
+	if val := v1.Inspect(); val != "9" {
+		t.Fatalf("got=%s expect=%s\n", val, "9")
+	}
+	if val := v2.Inspect(); val != "5" {
+		t.Fatalf("got=%s expect=%s\n", val, "5")
+	}
+}
