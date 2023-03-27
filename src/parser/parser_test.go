@@ -201,3 +201,23 @@ func TestIfElseStatement(t *testing.T) {
 		t.Fatalf("got=%d expect=%d\n", node.Else.NodeKind, ast.RETURN)
 	}
 }
+
+func TestForStatement(t *testing.T) {
+	input := `
+	a = 1
+	a < 5 ならば 繰り返す a = a + 1
+	`
+	token := token.Tokenize(input)
+	program, _ := Parse(token)
+
+	node := program.Nodes[1]
+	if node.NodeKind != ast.FOR {
+		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.FOR)
+	}
+	if node.Condition.NodeKind != ast.GT {
+		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.GT)
+	}
+	if node.Then.NodeKind != ast.ASSIGN {
+		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.ASSIGN)
+	}
+}

@@ -151,3 +151,24 @@ func TestIfStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestForStatement(t *testing.T) {
+	input := `
+	a = 1
+	a < 5 ならば 繰り返す a = a + 1
+	a 戻す
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error,\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	Eval(program.Nodes[1], env)
+	v := Eval(program.Nodes[2], env)
+	if val := v.(*object.Integer).Value; val != 5 {
+		t.Fatalf("got=%d expect=%d\n", val, 5)
+	}
+}

@@ -71,6 +71,13 @@ func (p *Parser) stmt() *ast.Node {
 
 	node := p.expr()
 
+	if p.consume(token.THEN) && p.consume(token.FOR) {
+		fNode := ast.NewNode(ast.FOR)
+		fNode.Condition = node
+		fNode.Then = p.stmt()
+		return fNode
+	}
+
 	if p.consume(token.RETURN) {
 		node = ast.NewNodeBinop(ast.RETURN, node, nil)
 	}

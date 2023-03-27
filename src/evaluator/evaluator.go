@@ -75,6 +75,23 @@ func evalIfStatement(node *ast.Node, env *object.Environment) object.Object {
 	return NULL
 }
 
+func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
+	var fnode object.Object
+
+	for {
+		condition := Eval(node.Condition, env)
+		if isError(condition) {
+			return condition
+		}
+
+		if isTruthly(condition) {
+			fnode = Eval(node.Then, env)
+		} else {
+			return fnode
+		}
+	}
+}
+
 func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
 	case ast.ASSIGN:
@@ -93,6 +110,8 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 		return Eval(node.Lhs, env)
 	case ast.IF:
 		return evalIfStatement(node, env)
+	case ast.FOR:
+		return evalForStatement(node, env)
 	}
 
 	lhs := Eval(node.Lhs, env)
