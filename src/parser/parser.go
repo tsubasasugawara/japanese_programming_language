@@ -57,6 +57,18 @@ func (p *Parser) program() *ast.Node {
 }
 
 func (p *Parser) stmt() *ast.Node {
+	if p.consume(token.IF) {
+		node := ast.NewNode(ast.IF)
+		node.Condition = p.expr()
+		p.consume(token.THEN)
+
+		node.Then = p.stmt()
+		if p.consume(token.ELSE) {
+			node.Else = p.stmt()
+		}
+		return node
+	}
+
 	node := p.expr()
 
 	if p.consume(token.RETURN) {

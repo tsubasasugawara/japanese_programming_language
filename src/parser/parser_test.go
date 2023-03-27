@@ -164,3 +164,40 @@ func TestReturnStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestIfStatement(t *testing.T) {
+	input := "もし 5 == 5 ならば 10 戻す"
+	token := token.Tokenize(input)
+	program, _ := Parse(token)
+
+	node := program.Nodes[0]
+	if node.NodeKind != ast.IF{
+		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.IF)
+	}
+	if node.Condition.NodeKind != ast.EQ {
+		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.EQ)
+	}
+	if node.Then.NodeKind != ast.RETURN {
+		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.RETURN)
+	}
+}
+
+func TestIfElseStatement(t *testing.T) {
+	input := "もし 5 != 5 ならば 10 戻す それ以外 15 戻す"
+	token := token.Tokenize(input)
+	program, _ := Parse(token)
+
+	node := program.Nodes[0]
+	if node.NodeKind != ast.IF{
+		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.IF)
+	}
+	if node.Condition.NodeKind != ast.NOT_EQ {
+		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.EQ)
+	}
+	if node.Then.NodeKind != ast.RETURN {
+		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.RETURN)
+	}
+	if node.Else == nil && node.Else.NodeKind != ast.RETURN {
+		t.Fatalf("got=%d expect=%d\n", node.Else.NodeKind, ast.RETURN)
+	}
+}

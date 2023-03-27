@@ -19,6 +19,10 @@ const (
 	NOT_EQ // 不等号
 
 	RETURN // 戻す(return)
+	IF // もし
+	ELSE // それ以外
+	THEN // ならば
+	FOR // 繰り返す
 )
 
 type RuntimeType int
@@ -33,6 +37,10 @@ type Node struct {
 
 	Lhs *Node
 	Rhs *Node
+
+	Condition *Node
+	Then *Node
+	Else *Node
 
 	Type RuntimeType
 

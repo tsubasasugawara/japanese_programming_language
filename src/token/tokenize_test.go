@@ -47,7 +47,7 @@ func tokenKindToString(kind TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す
 	`
 
 	tests := []struct {
@@ -96,6 +96,10 @@ func TestToken(t *testing.T) {
 		{IDENT, "こんにちは"},
 		{IDENT, "世界"},
 		{RETURN, "戻す"},
+		{IF, "もし"},
+		{ELSE, "それ以外"},
+		{THEN, "ならば"},
+		{FOR, "繰り返す"},
 		{EOF, ""},
 	}
 

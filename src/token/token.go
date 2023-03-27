@@ -25,6 +25,10 @@ const (
 	RPAREN // ),）
 
 	RETURN
+	IF
+	ELSE
+	THEN
+	FOR
 
 	EOF
 	ILLEGAL
@@ -32,6 +36,10 @@ const (
 
 var keywords = map[string]TokenKind{
 	"戻す" : RETURN,
+	"もし" : IF,
+	"それ以外" : ELSE,
+	"ならば" : THEN,
+	"繰り返す" : FOR,
 }
 
 type Token struct {

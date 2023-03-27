@@ -7,6 +7,10 @@ import (
 	"jpl/object"
 )
 
+var (
+	NULL = &object.Null{}
+)
+
 func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
@@ -16,6 +20,19 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR
 	}
 	return false
+}
+
+func isTruthly(obj object.Object) bool {
+	switch obj.Type() {
+	case object.BOOLEAN:
+		return obj.(*object.Boolean).Value
+	case object.INTEGER:
+		return obj.(*object.Integer).Value != 0
+	case object.NULL:
+		return false
+	default:
+		return true
+	}
 }
 
 func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right object.Object) object.Object {
@@ -44,12 +61,26 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 	}
 }
 
+func evalIfStatement(node *ast.Node, env *object.Environment) object.Object {
+	condition := Eval(node.Condition, env)
+	if isError(condition) {
+		return condition
+	}
+
+	if isTruthly(condition) {
+		return Eval(node.Then, env)
+	} else if node.Else != nil {
+		return Eval(node.Else, env)
+	}
+	return NULL
+}
+
 func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
 	case ast.ASSIGN:
 		val := Eval(node.Rhs, env)
 		env.Set(node.Lhs.Ident, val)
-		return &object.Null{}
+		return NULL
 	case ast.IDENT:
 		object, ok := env.Get(node.Ident)
 		if !ok {
@@ -60,6 +91,8 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 		return &object.Integer{Value: node.Num}
 	case ast.RETURN:
 		return Eval(node.Lhs, env)
+	case ast.IF:
+		return evalIfStatement(node, env)
 	}
 
 	lhs := Eval(node.Lhs, env)
