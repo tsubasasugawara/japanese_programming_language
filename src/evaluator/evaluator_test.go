@@ -152,6 +152,30 @@ func TestIfStatement(t *testing.T) {
 	}
 }
 
+func TestIfStatements(t *testing.T) {
+	input := `
+		a = 1
+		もし a==1 ならば
+			a = a + 10
+		それ以外
+			a = a - 10
+		a 戻す
+		`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	Eval(program.Nodes[1], env)
+	v := Eval(program.Nodes[2], env)
+	if val := v.(*object.Integer).Value; val != 11 {
+		t.Fatalf("got=%d expect=%d\n", val, 11)
+	}
+}
+
 func TestForStatement(t *testing.T) {
 	input := `
 	a = 1
