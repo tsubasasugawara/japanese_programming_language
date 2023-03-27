@@ -108,9 +108,9 @@ func TestIdentifier(t *testing.T) {
 func TestReturnStatement(t *testing.T) {
 	tests := []struct {
 		input string
-		expect int
+		expect string
 	} {
-		{"5+5 戻す", 10},
+		{"5+5 戻す", "10"},
 	}
 
 	for i, v := range tests {
@@ -122,8 +122,8 @@ func TestReturnStatement(t *testing.T) {
 
 		env := object.NewEnvironment()
 		e := Eval(program.Nodes[0], env)
-		if val := e.(*object.Integer).Value; val != v.expect {
-			t.Fatalf("test%d : got=%d expect=%d\n", i, val, v.expect)
+		if val := e.Inspect(); val != v.expect {
+			t.Fatalf("test%d : got=%s expect=%s\n", i, val, v.expect)
 		}
 	}
 }
@@ -131,10 +131,10 @@ func TestReturnStatement(t *testing.T) {
 func TestIfStatement(t *testing.T) {
 	tests := []struct {
 		input string
-		expect int
+		expect string
 	} {
-		{"もし 5==5 ならば 10 戻す", 10},
-		{"もし 5!=5 10 戻す それ以外 15 戻す", 15},
+		{"もし 5==5 ならば 10 戻す", "10"},
+		{"もし 5!=5 10 戻す それ以外 15 戻す", "15"},
 	}
 	
 	for i, v := range tests {
@@ -146,8 +146,8 @@ func TestIfStatement(t *testing.T) {
 
 		env := object.NewEnvironment()
 		e := Eval(program.Nodes[0], env)
-		if val := e.(*object.Integer).Value; val != v.expect {
-			t.Fatalf("test%d : got=%d expect=%d\n", i, val, v.expect)
+		if val := e.Inspect(); val != v.expect {
+			t.Fatalf("test%d : got=%s expect=%s\n", i, val, v.expect)
 		}
 	}
 }
@@ -171,8 +171,8 @@ func TestIfStatements(t *testing.T) {
 	Eval(program.Nodes[0], env)
 	Eval(program.Nodes[1], env)
 	v := Eval(program.Nodes[2], env)
-	if val := v.(*object.Integer).Value; val != 11 {
-		t.Fatalf("got=%d expect=%d\n", val, 11)
+	if val := v.Inspect(); val != "11" {
+		t.Fatalf("got=%s expect=%s\n", val, "11")
 	}
 }
 
@@ -192,7 +192,7 @@ func TestForStatement(t *testing.T) {
 	Eval(program.Nodes[0], env)
 	Eval(program.Nodes[1], env)
 	v := Eval(program.Nodes[2], env)
-	if val := v.(*object.Integer).Value; val != 5 {
-		t.Fatalf("got=%d expect=%d\n", val, 5)
+	if val := v.Inspect(); val != "5" {
+		t.Fatalf("got=%s expect=%s\n", val, "5")
 	}
 }

@@ -107,7 +107,11 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 	case ast.NUMBER:
 		return &object.Integer{Value: node.Num}
 	case ast.RETURN:
-		return Eval(node.Lhs, env)
+		val := Eval(node.Lhs, env)
+		if isError(val) {
+			return val
+		}
+		return &object.ReturnValue{Value: val}
 	case ast.IF:
 		return evalIfStatement(node, env)
 	case ast.FOR:
