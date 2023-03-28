@@ -115,10 +115,16 @@ func Tokenize(input string) *Token {
 		case '/', '／':
 			if ch := l.peekChar(); ch == '/' || ch == '／' {
 				for l.ch != '\n' {
+					if l.ch == 0 {
+						break
+					}
 					l.readChar()
 				}
 			} else if ch := l.peekChar(); ch == '*' || ch == '＊' {
 				for !(l.ch == '*' || l.ch == '＊') || !(l.peekChar() == '/' || l.peekChar() == '／') {
+					if l.ch == 0 {
+						break
+					}
 					l.readChar()
 				}
 				l.readChar()
