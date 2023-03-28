@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strconv"
 
 	"jpl/ast"
@@ -24,7 +25,7 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
-	return p.curToken.Kind == tokenKind
+	return p.curToken != nil && p.curToken.Kind == tokenKind
 }
 
 func (p *Parser) consume(tokenKind token.TokenKind) bool {
@@ -44,20 +45,17 @@ func (p *Parser) expect(tokenKind token.TokenKind) bool {
 		return true
 	}
 
-	p.appendError("シンタックスエラー。")
-	p.nextToken()
 	return false
 }
 
-func (p *Parser) appendError(err string) {
-	p.Errors = append(p.Errors, err)
+func (p *Parser) appendError(format string, arg ...interface{}) {
+	p.Errors = append(p.Errors, fmt.Sprintf(format, arg...))
 }
 
 func (p *Parser) program() *ast.Node {
 	if p.consume(token.FUNC) {
 		if !p.curTokenIs(token.IDENT) {
-			p.appendError("識別子が必要です。");
-			p.nextToken()
+			p.appendError("\"関数\"キーワードの後には識別子が必要です。");
 			return nil
 		}
 		funcNode := ast.NewNode(ast.FUNC)
@@ -65,6 +63,7 @@ func (p *Parser) program() *ast.Node {
 		p.nextToken()
 
 		if !p.expect(token.LPAREN) {
+			p.appendError("括弧が必要です。")
 			return nil
 		}
 		for p.curTokenIs(token.IDENT) {
@@ -73,6 +72,7 @@ func (p *Parser) program() *ast.Node {
 			p.nextToken()
 		}
 		if !p.expect(token.RPAREN) {
+			p.appendError("括弧を閉じてください。")
 			return nil
 		}
 
@@ -87,9 +87,16 @@ func (p *Parser) stmt() *ast.Node {
 	if p.consume(token.IF) {
 		node := ast.NewNode(ast.IF)
 		node.Condition = p.expr()
+		if node.Condition == nil {
+			return nil
+		}
 		p.consume(token.THEN)
 
 		node.Then = p.stmt()
+		if node.Then == nil {
+			return nil
+		}
+
 		if p.consume(token.ELSE) {
 			node.Else = p.stmt()
 		}
@@ -97,6 +104,10 @@ func (p *Parser) stmt() *ast.Node {
 	} else if p.consume(token.LBRACE) {
 		node := ast.NewNode(ast.BLOCK)
 		for !p.consume(token.RBRACE) {
+			if p.curToken == nil || p.curTokenIs(token.EOF) {
+				p.appendError("括弧を閉じてください。")
+				return nil
+			}
 			node.Stmts = append(node.Stmts, p.stmt())
 		}
 		return node
@@ -204,7 +215,11 @@ func (p *Parser) unary() *ast.Node {
 func (p *Parser) primary() *ast.Node {
 	if p.consume(token.LPAREN) {
 		node := p.expr()
+		if node == nil {
+			return nil
+		}
 		if !p.expect(token.RPAREN) {
+			p.appendError("括弧を閉じてください。")
 			return nil
 		}
 		return node
@@ -218,12 +233,12 @@ func (p *Parser) primary() *ast.Node {
 			node := ast.NewNode(ast.CALL)
 			node.Ident = identifier
 
-			// TODO: 右括弧がない時に無限ループしてしまう
-			for !p.curTokenIs(token.RPAREN) {
+			for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
 				node.Params = append(node.Params, p.expr()) 
 			}
 
 			if !p.expect(token.RPAREN) {
+				p.appendError("括弧を閉じてください。")
 				return nil
 			}
 
@@ -234,19 +249,28 @@ func (p *Parser) primary() *ast.Node {
 		return node
 	}
 
-	str := utils.ToLower(p.curToken.Literal)
-	num, err := strconv.Atoi(str)
-	if err != nil {
-		p.appendError("数値が必要です。")
+	if p.curToken != nil && p.curToken.Kind != token.EOF {
+		str := utils.ToLower(p.curToken.Literal)
+		num, err := strconv.Atoi(str)
+		if err != nil {
+			p.appendError("整数ではありません。 取得した文字=%s", str)
+			p.nextToken()
+			return nil
+		}
 		p.nextToken()
-		return nil
+		return ast.NewIntegerNode(num)
 	}
-	p.nextToken()
-	return ast.NewIntegerNode(num)
-}
 
+	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
+		p.appendError("対応していない文字です。")
+	} else {
+		p.appendError("式が必要です。")
+	}
+	return nil
+}
+	
 func Parse(head *token.Token) (*ast.Program, []string) {
-	p := newParser(head)
+		p := newParser(head)
 	program := ast.NewProgram()
 
 	for !p.curTokenIs(token.EOF) {

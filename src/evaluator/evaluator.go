@@ -94,9 +94,10 @@ func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
 
 func evalBlock(node *ast.Node, env *object.Environment) object.Object {
 	var res object.Object
+	blockEnv := object.NewEnclosedEnvironment(env)
 
 	for _, stmt:= range node.Stmts {
-		res = Eval(stmt, env)
+		res = Eval(stmt, blockEnv)
 
 		if res == nil {
 			continue
@@ -168,9 +169,7 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 	case ast.FOR:
 		return evalForStatement(node, env)
 	case ast.BLOCK:
-		//TODO: 新しい環境をevalBlock関数の中で生成する
-		blockEnv := object.NewEnclosedEnvironment(env)
-		return evalBlock(node, blockEnv)
+		return evalBlock(node, env)
 	case ast.FUNC:
 		env.Set(node.Ident, genFuncObj(node, env))
 		return NULL

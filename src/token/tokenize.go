@@ -181,7 +181,7 @@ func Tokenize(input string) *Token {
 				cur = newToken(kind, cur, str)
 				continue
 			} else {
-				cur = newToken(ILLEGAL, cur, "")
+				cur = newToken(ILLEGAL, cur, string(l.ch))
 			}
 		}
 		l.readChar()
