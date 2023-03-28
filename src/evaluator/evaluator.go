@@ -155,7 +155,7 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 			return newError("変数が宣言されていません")
 		}
 		return object
-	case ast.NUMBER:
+	case ast.INTEGER:
 		return &object.Integer{Value: node.Num}
 	case ast.RETURN:
 		val := Eval(node.Lhs, env)

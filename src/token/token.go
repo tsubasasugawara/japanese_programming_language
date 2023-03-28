@@ -3,7 +3,7 @@ package token
 type TokenKind int
 
 const (
-	NUMBER TokenKind = iota
+	INTEGER TokenKind = iota
 
 	IDENT //識別子
 
@@ -58,8 +58,8 @@ func newToken(kind TokenKind, cur *Token, literal string) *Token {
 	return token
 }
 
-func newNumberToken(cur *Token, literal string) *Token {
-	token := newToken(NUMBER, cur, literal)
+func newIntegerToken(cur *Token, literal string) *Token {
+	token := newToken(INTEGER, cur, literal)
 	return token
 }
 

@@ -28,7 +28,7 @@ func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
 }
 
 func (p *Parser) consume(tokenKind token.TokenKind) bool {
-	if p.curTokenIs(token.NUMBER) ||
+	if p.curTokenIs(token.INTEGER) ||
 		p.curTokenIs(token.EOF) ||
 		!p.curTokenIs(tokenKind) {
 			return false
@@ -194,9 +194,9 @@ func (p *Parser) mul() *ast.Node {
 
 func (p *Parser) unary() *ast.Node {
 	if p.consume(token.PLUS) {
-		return ast.NewNodeBinop(ast.ADD, ast.NewNumberNode(0), p.primary())
+		return ast.NewNodeBinop(ast.ADD, ast.NewIntegerNode(0), p.primary())
 	} else if p.consume(token.MINUS) {
-		return ast.NewNodeBinop(ast.SUB, ast.NewNumberNode(0), p.primary())
+		return ast.NewNodeBinop(ast.SUB, ast.NewIntegerNode(0), p.primary())
 	}
 	return p.primary()
 }
@@ -242,7 +242,7 @@ func (p *Parser) primary() *ast.Node {
 		return nil
 	}
 	p.nextToken()
-	return ast.NewNumberNode(num)
+	return ast.NewIntegerNode(num)
 }
 
 func Parse(head *token.Token) (*ast.Program, []string) {

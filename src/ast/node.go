@@ -3,7 +3,7 @@ package ast
 type NodeKind int
 
 const (
-	NUMBER NodeKind = iota
+	INTEGER NodeKind = iota
 
 	IDENT // 識別子
 
@@ -29,12 +29,6 @@ const (
 	BLOCK
 )
 
-type RuntimeType int
-
-const (
-	INTEGER RuntimeType = iota
-)
-
 type Node struct {
 	NodeKind NodeKind
 	Next     *Node
@@ -51,9 +45,7 @@ type Node struct {
 	Params []*Node
 	Body *Node
 
-	Type RuntimeType
-
-	Num int // NUMBERの時に値を格納する
+	Num int // INTEGERの時に値を格納する
 	Ident string // 識別子を格納する
 }
 
@@ -62,8 +54,8 @@ func NewNode(nodeKind NodeKind) *Node {
 	return n
 }
 
-func NewNumberNode(num int) *Node {
-	n := NewNode(NUMBER)
+func NewIntegerNode(num int) *Node {
+	n := NewNode(INTEGER)
 	n.Num = num
 	return n
 }

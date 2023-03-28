@@ -167,7 +167,7 @@ func Tokenize(input string) *Token {
 			cur = newToken(EOF, cur, "")
 		default:
 			if isNum(l.ch) {
-				cur = newNumberToken(cur, l.readNum())
+				cur = newIntegerToken(cur, l.readNum())
 				continue
 			} else if isJapanese(l.ch) || isAlphabet(l.ch) {
 				str := l.readString()

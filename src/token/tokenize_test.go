@@ -15,8 +15,8 @@ func tokenKindToString(kind TokenKind) string {
 		res = "ASTERISK"
 	case SLASH:
 		res = "SLASH"
-	case NUMBER:
-		res = "NUMBER"
+	case INTEGER:
+		res = "INTEGER"
 	case LPAREN:
 		res = "LPAREN"
 	case RPAREN:
@@ -64,10 +64,10 @@ func TestToken(t *testing.T) {
 		{SLASH, "/"},
 		{SLASH, "／"},
 		{SLASH, "÷"},
-		{NUMBER, "21"},
-		{NUMBER, "02356"},
-		{NUMBER, "０９"},
-		{NUMBER, "１２０"},
+		{INTEGER, "21"},
+		{INTEGER, "02356"},
+		{INTEGER, "０９"},
+		{INTEGER, "１２０"},
 		{LPAREN, "("},
 		{RPAREN, ")"},
 		{LPAREN, "（"},
