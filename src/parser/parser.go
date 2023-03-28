@@ -214,10 +214,16 @@ func (p *Parser) unary() *ast.Node {
 
 func (p *Parser) primary() *ast.Node {
 	if p.consume(token.LPAREN) {
+		if p.consume(token.RPAREN) {
+			p.appendError("式が必要です。")
+			return nil
+		}
+
 		node := p.expr()
 		if node == nil {
 			return nil
 		}
+
 		if !p.expect(token.RPAREN) {
 			p.appendError("括弧を閉じてください。")
 			return nil

@@ -36,6 +36,10 @@ func isTruthly(obj object.Object) bool {
 }
 
 func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right object.Object) object.Object {
+	if left.Type() != object.INTEGER || right.Type() != object.INTEGER {
+		return newError("数値が必要です。")
+	}
+
 	lval := left.(*object.Integer).Value
 	rval := right.(*object.Integer).Value
 
