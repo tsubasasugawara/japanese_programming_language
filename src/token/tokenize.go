@@ -112,7 +112,20 @@ func Tokenize(input string) *Token {
 			cur = newToken(MINUS, cur, string(l.ch))
 		case '*', '＊', '×':
 			cur = newToken(ASTERISK, cur, string(l.ch))
-		case '/', '／', '÷':
+		case '/', '／':
+			if ch := l.peekChar(); ch == '/' || ch == '／' {
+				for l.ch != '\n' {
+					l.readChar()
+				}
+			} else if ch := l.peekChar(); ch == '*' || ch == '＊' {
+				for !(l.ch == '*' || l.ch == '＊') || !(l.peekChar() == '/' || l.peekChar() == '／') {
+					l.readChar()
+				}
+				l.readChar()
+			} else {
+				cur = newToken(SLASH, cur, string(l.ch))
+			}
+		case '÷':
 			cur = newToken(SLASH, cur, string(l.ch))
 		case '(', '（', '「':
 			cur = newToken(LPAREN, cur, string(l.ch))

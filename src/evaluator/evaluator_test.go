@@ -249,3 +249,49 @@ func TestFuncCall(t *testing.T) {
 		t.Fatalf("got=%s expect=%s\n", val, "-75")
 	}
 }
+
+func TestRowComment(t *testing.T) {
+	input := `
+	// こんにちは = 100
+	こんにちは = 800
+	／／ こんにちは ＝ こんにちは ＋ 100
+	こんにちは
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v := Eval(program.Nodes[1], env)
+	
+	if val := v.Inspect(); val != "800" {
+		t.Fatalf("got=%s expect%s\n", val, "800")
+	}
+}
+
+func TestBlockComment(t *testing.T) {
+	input := `
+	こんにちは = 800
+	/*
+	こんにちは = 100
+	こんにちは = こんにちは + 100
+	＊／
+	こんにちは
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v := Eval(program.Nodes[1], env)
+	
+	if val := v.Inspect(); val != "800" {
+		t.Fatalf("got=%s expect%s\n", val, "800")
+	}
+}
