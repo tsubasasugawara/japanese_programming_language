@@ -2,6 +2,9 @@ package object
 
 import (
 	"fmt"
+	"strings"
+
+	"jpl/ast"
 )
 
 type ObjectType string
@@ -12,6 +15,7 @@ const (
 	BOOLEAN = "BOOLEAN"
 	NULL = "NULL"
 	RETURN_VALUE = "RETURN_VALUE"
+	FUNCTION = "FUNCTION"
 )
 
 type Object interface {
@@ -65,4 +69,21 @@ func (r *ReturnValue) Type() ObjectType {
 }
 func (r *ReturnValue) Inspect() string {
 	return r.Value.Inspect()
+}
+
+type Function struct {
+	Params []*ast.Node
+	Body *ast.Node
+	Env *Environment
+}
+func (f *Function) Type() ObjectType {
+	return FUNCTION
+}
+func (f *Function) Inspect() string {
+	params := []string{}
+	for _, v := range f.Params {
+		params = append(params, v.Ident)
+	}
+
+	return fmt.Sprintf("関数(%s)\n", strings.Join(params, ","))
 }

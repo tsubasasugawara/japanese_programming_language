@@ -243,3 +243,54 @@ func TestBlockStatement(t *testing.T) {
 		t.Fatalf("got=%d expect=%d\n", len(node.Stmts), 3)
 	}
 }
+
+func TestFuncDeclation(t *testing.T) {
+	input := `
+	関数 足し算(a, b) {
+		a 戻す
+	}`
+	head := token.Tokenize(input)
+	program, _ := Parse(head)
+
+	node := program.Nodes[0]
+	if node.NodeKind != ast.FUNC{
+		t.Fatalf("kind : got=%d expect=%d\n", node.NodeKind, ast.FUNC)
+	}
+	if node.Ident != "足し算" {
+		t.Fatalf("ident : got=%s expect=%s\n", node.Ident, "足し算")
+	}
+	if len(node.Params) != 2 {
+		t.Fatalf("params length : got=%d expect=%d\n", len(node.Params), 2)
+	}
+	if node.Params[0].Ident != "a" {
+		t.Fatalf("first arg : got=%s expect=%s\n", node.Params[0].Ident, "a")
+	}
+	if node.Params[1].Ident != "b" {
+		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "b")
+	}
+	if node.Body.NodeKind != ast.BLOCK {
+		t.Fatalf("body kind : got=%d expect=%d\n", node.Body.NodeKind, ast.BLOCK)
+	}
+}
+
+func TestFuncCall(t *testing.T) {
+	input := `
+	こんにちは(世界, 日本)
+	`
+	head := token.Tokenize(input)
+	program, _ := Parse(head)
+
+	node := program.Nodes[0]
+	if node.NodeKind != ast.CALL{
+		t.Fatalf("kind : got=%d expect=%d\n", node.NodeKind, ast.CALL)
+	}	
+	if node.Ident != "こんにちは" {
+		t.Fatalf("ident : got=%s expect=%s\n", node.Ident, "こんにちは")
+	}
+	if node.Params[0].Ident != "世界" {
+		t.Fatalf("first arg : got=%s expect=%s\n", node.Params[0].Ident, "世界")
+	}
+	if node.Params[1].Ident != "日本" {
+		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "日本")
+	}
+}

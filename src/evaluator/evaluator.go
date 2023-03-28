@@ -57,7 +57,7 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 	case ast.GE:
 		return &object.Boolean{Value: lval <= rval}
 	default:
-		return newError("unknown operator")
+		return newError("対応していない演算子です")
 	}
 }
 
@@ -110,6 +110,39 @@ func evalBlock(node *ast.Node, env *object.Environment) object.Object {
 	return res
 }
 
+func genFuncObj(node *ast.Node, env *object.Environment) object.Object {
+	funcObj := &object.Function{}
+	funcObj.Env = object.NewEnclosedEnvironment(env)
+
+	for _, v := range node.Params {
+		funcObj.Params = append(funcObj.Params, v)
+		funcObj.Env.Set(v.Ident, NULL)
+	}
+
+	funcObj.Body = node.Body
+	return funcObj
+}
+
+func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
+	obj, ok := env.Get(node.Ident)
+	if !ok || obj.Type() != object.FUNCTION {
+		return newError("関数が宣言されていません。")
+	}
+	if len(obj.(*object.Function).Params) != len(node.Params) {
+		return newError("引数の個数が正しくありません。")
+	}
+
+	for i, v := range obj.(*object.Function).Params {
+		p := Eval(node.Params[i], env)
+		if isError(p) {
+			return p
+		}
+		obj.(*object.Function).Env.Set(v.Ident, p)
+	}
+
+	return Eval(obj.(*object.Function).Body, obj.(*object.Function).Env)
+}
+
 func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
 	case ast.ASSIGN:
@@ -119,7 +152,7 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 	case ast.IDENT:
 		object, ok := env.Get(node.Ident)
 		if !ok {
-			return newError("identifier not found")
+			return newError("変数が宣言されていません")
 		}
 		return object
 	case ast.NUMBER:
@@ -135,8 +168,14 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 	case ast.FOR:
 		return evalForStatement(node, env)
 	case ast.BLOCK:
+		//TODO: 新しい環境をevalBlock関数の中で生成する
 		blockEnv := object.NewEnclosedEnvironment(env)
 		return evalBlock(node, blockEnv)
+	case ast.FUNC:
+		env.Set(node.Ident, genFuncObj(node, env))
+		return NULL
+	case ast.CALL:
+		return evalCallFunc(node, env)
 	}
 
 	lhs := Eval(node.Lhs, env)

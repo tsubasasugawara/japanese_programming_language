@@ -27,7 +27,7 @@ func (l *Lexer) peekChar() rune {
 }
 
 func (l *Lexer) skipSpecialChar() {
-	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' {
+	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' || l.ch == ',' || l.ch == '、'  {
 		l.readChar()
 	}
 }
@@ -89,7 +89,8 @@ func (l *Lexer) readString() string {
 	}
 	l.readChar()
 
-	for isAlphabet(l.ch) || isJapanese(l.ch) || isNum(l.ch) || l.ch == '_' || l.ch == '＿' {
+	for isAlphabet(l.ch) || isJapanese(l.ch) || isNum(l.ch) ||
+		l.ch == '_' || l.ch == '＿' {
 		l.readChar()
 	}
 	return string(l.input[position:l.position])

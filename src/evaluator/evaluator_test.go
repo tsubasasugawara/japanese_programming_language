@@ -225,3 +225,27 @@ func TestBlockStatement(t *testing.T) {
 		t.Fatalf("got=%s expect=%s\n", val, "5")
 	}
 }
+
+func TestFuncCall(t *testing.T) {
+	input := `
+	関数 abc(a, b, c) {
+		a + b - c 戻す
+	}
+	c = 90
+	abc(10, 5, c)
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	Eval(program.Nodes[1], env)
+	v := Eval(program.Nodes[2], env)
+
+	if val := v.Inspect(); val != "-75" {
+		t.Fatalf("got=%s expect=%s\n", val, "-75")
+	}
+}

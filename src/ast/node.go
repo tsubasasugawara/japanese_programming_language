@@ -24,6 +24,8 @@ const (
 	THEN // ならば
 	FOR // 繰り返す
 
+	FUNC // 関数
+	CALL // 関数呼び出し
 	BLOCK
 )
 
@@ -45,6 +47,9 @@ type Node struct {
 	Else *Node
 
 	Stmts []*Node
+	
+	Params []*Node
+	Body *Node
 
 	Type RuntimeType
 

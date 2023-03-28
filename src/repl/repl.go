@@ -41,7 +41,9 @@ func Start(in io.Reader, out io.Writer) {
 		}
 		for _, v := range program.Nodes {
 			o := evaluator.Eval(v, env)
-			fmt.Println(o.Inspect())
+			if o.Type() != object.NULL {
+				fmt.Println(o.Inspect())
+			}
 		}
 	}
 }

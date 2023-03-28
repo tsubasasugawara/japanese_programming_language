@@ -44,7 +44,8 @@ func (p *Parser) expect(tokenKind token.TokenKind) bool {
 		return true
 	}
 
-	p.appendError("Syntax Error in expect()")
+	p.appendError("シンタックスエラー。")
+	p.nextToken()
 	return false
 }
 
@@ -53,6 +54,32 @@ func (p *Parser) appendError(err string) {
 }
 
 func (p *Parser) program() *ast.Node {
+	if p.consume(token.FUNC) {
+		if !p.curTokenIs(token.IDENT) {
+			p.appendError("識別子が必要です。");
+			p.nextToken()
+			return nil
+		}
+		funcNode := ast.NewNode(ast.FUNC)
+		funcNode.Ident = p.curToken.Literal
+		p.nextToken()
+
+		if !p.expect(token.LPAREN) {
+			return nil
+		}
+		for p.curTokenIs(token.IDENT) {
+			ident := ast.NewIdentNode(p.curToken.Literal)
+			funcNode.Params = append(funcNode.Params, ident)
+			p.nextToken()
+		}
+		if !p.expect(token.RPAREN) {
+			return nil
+		}
+
+		funcNode.Body = p.stmt()
+		return funcNode
+	}
+
 	return p.stmt()
 }
 
@@ -177,20 +204,40 @@ func (p *Parser) unary() *ast.Node {
 func (p *Parser) primary() *ast.Node {
 	if p.consume(token.LPAREN) {
 		node := p.expr()
-		p.expect(token.RPAREN)
+		if !p.expect(token.RPAREN) {
+			return nil
+		}
 		return node
 	}
 
 	if p.curTokenIs(token.IDENT) {
-		node := ast.NewIdentNode(p.curToken.Literal)
+		identifier := p.curToken.Literal
 		p.nextToken()
+
+		if p.consume(token.LPAREN) {
+			node := ast.NewNode(ast.CALL)
+			node.Ident = identifier
+
+			// TODO: 右括弧がない時に無限ループしてしまう
+			for !p.curTokenIs(token.RPAREN) {
+				node.Params = append(node.Params, p.expr()) 
+			}
+
+			if !p.expect(token.RPAREN) {
+				return nil
+			}
+
+			return node
+		}
+
+		node := ast.NewIdentNode(identifier)
 		return node
 	}
 
 	str := utils.ToLower(p.curToken.Literal)
 	num, err := strconv.Atoi(str)
 	if err != nil {
-		p.appendError("Expect Number.")
+		p.appendError("数値が必要です。")
 		p.nextToken()
 		return nil
 	}

@@ -31,6 +31,7 @@ const (
 	ELSE
 	THEN
 	FOR
+	FUNC
 
 	EOF
 	ILLEGAL
@@ -42,6 +43,7 @@ var keywords = map[string]TokenKind{
 	"それ以外" : ELSE,
 	"ならば" : THEN,
 	"繰り返す" : FOR,
+	"関数" : FUNC,
 }
 
 type Token struct {
