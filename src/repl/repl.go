@@ -52,10 +52,10 @@ func Start(in io.Reader, out io.Writer) {
 			}
 
 			// 括弧が閉じていなければ続ける
-			fmt.Print(errMessages)
 			if stmtNotCompleted {
 				continue
 			} else {
+				fmt.Print(errMessages)
 				input = ""
 				prompt = STANDARD_PROMPT
 				continue

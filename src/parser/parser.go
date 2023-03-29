@@ -233,11 +233,18 @@ func (p *Parser) primary() *ast.Node {
 			return nil
 		}
 
-		if !p.expect(token.RPAREN) {
+		if p.expect(token.RPAREN) {
+			return node
+		}
+
+		if !p.expect(token.RPAREN) && p.curTokenIs(token.EOF) {
 			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			p.appendError(err)
 			return nil
 		}
+
+		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+		p.appendError(err)
 		return node
 	}
 
