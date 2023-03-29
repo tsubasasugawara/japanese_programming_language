@@ -26,6 +26,8 @@ const (
 	LBRACE // {, ｛
 	RBRACE // }, ｝
 
+	COMMA //, 、
+
 	RETURN
 	IF
 	ELSE

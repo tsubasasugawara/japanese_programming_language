@@ -70,6 +70,7 @@ func (p *Parser) program() *ast.Node {
 			ident := ast.NewIdentNode(p.curToken.Literal)
 			funcNode.Params = append(funcNode.Params, ident)
 			p.nextToken()
+			p.consume(token.COMMA)
 		}
 		if !p.expect(token.RPAREN) {
 			p.appendError("括弧を閉じてください。")
@@ -241,6 +242,7 @@ func (p *Parser) primary() *ast.Node {
 
 			for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
 				node.Params = append(node.Params, p.expr()) 
+				p.consume(token.COMMA)
 			}
 
 			if !p.expect(token.RPAREN) {

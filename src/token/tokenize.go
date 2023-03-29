@@ -27,7 +27,7 @@ func (l *Lexer) peekChar() rune {
 }
 
 func (l *Lexer) skipSpecialChar() {
-	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' || l.ch == ',' || l.ch == '、'  {
+	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' {
 		l.readChar()
 	}
 }
@@ -169,6 +169,8 @@ func Tokenize(input string) *Token {
 			} else {
 				cur = newToken(ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
 			}
+		case ',', '、':
+			cur = newToken(COMMA, cur, string(l.ch))
 		case 0:
 			cur = newToken(EOF, cur, "")
 		default:
