@@ -9,41 +9,67 @@ import (
 	"jpl/parser"
 	"jpl/evaluator"
 	"jpl/object"
+	"jpl/ast"
 )
 
-const PROMPT = ">> "
+const STANDARD_PROMPT = ">> "
+const MULTI_LINE_PROMPT = "..."
 
-func printParserErrors(errors []string) {
+func printParserErrors(errors []ast.Error) {
 	for _, err := range errors {
-		fmt.Println(err)
+		fmt.Println(err.Message())
 	}
 }
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
-
 	env := object.NewEnvironment()
 
+	input := ""
+	var prompt = STANDARD_PROMPT
+
 	for {
-		fmt.Print(PROMPT)
+		fmt.Print(prompt)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
 		}
 
-		line := scanner.Text()
+		input = input + scanner.Text() + "\n"
 
-		head := token.Tokenize(line)
+		head := token.Tokenize(input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
-			printParserErrors(errors)
-			continue
+			errMessages := ""
+			stmtNotCompleted := false //括弧が閉じているかどうか
+			for _, err := range errors {
+				e, ok := err.(*ast.SyntaxError)
+				if ok && (e.Category() == ast.MISSING_RBRACE || e.Category() == ast.MISSING_RPAREN) {
+					prompt = MULTI_LINE_PROMPT
+					stmtNotCompleted = true
+				}
+				errMessages += err.Message() + "\n"
+			}
+
+			// 括弧が閉じていなければ続ける
+			fmt.Print(errMessages)
+			if stmtNotCompleted {
+				continue
+			} else {
+				input = ""
+				prompt = STANDARD_PROMPT
+				continue
+			}
 		}
+
 		for _, v := range program.Nodes {
 			o := evaluator.Eval(v, env)
 			if o.Type() != object.NULL {
 				fmt.Println(o.Inspect())
 			}
 		}
+
+		input = ""
+		prompt = STANDARD_PROMPT
 	}
 }

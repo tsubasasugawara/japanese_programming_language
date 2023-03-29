@@ -169,7 +169,7 @@ func Tokenize(input string) *Token {
 			} else {
 				cur = newToken(ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
 			}
-		case ',', '、':
+		case ',', '、', '，':
 			cur = newToken(COMMA, cur, string(l.ch))
 		case 0:
 			cur = newToken(EOF, cur, "")
