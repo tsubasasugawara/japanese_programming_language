@@ -112,6 +112,10 @@ func evalBlock(node *ast.Node, env *object.Environment) object.Object {
 		}
 	}
 
+	if res == nil {
+		res = NULL
+	}
+
 	return res
 }
 
