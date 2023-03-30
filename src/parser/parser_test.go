@@ -298,3 +298,33 @@ func TestFuncCall(t *testing.T) {
 		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "日本")
 	}
 }
+
+func TestExtendAssign(t *testing.T) {
+	tests := []struct {
+		input string
+		nodeKind ast.NodeKind
+		rhs int
+	} {
+	{"a = 10", ast.ASSIGN, 10},
+	{"a += 1", ast.PA, 1},
+	{"a -= 2", ast.MA, 2},
+	{"a *= 3", ast.AA, 3},
+	{"a /= 4", ast.SA, 4},
+	}
+	
+	for i, v := range tests {
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		node := program.Nodes[0]
+		if node.NodeKind != v.nodeKind {
+			t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
+		}
+		if node.Lhs == nil || node.Lhs.Ident != "a"{
+			t.Fatalf("test%d(lhs) : got=%s expect=%s\n", i, node.Lhs.Ident, "a")
+		}
+		if node.Rhs == nil || node.Rhs.Num != v.rhs {
+			t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		}
+	}
+}

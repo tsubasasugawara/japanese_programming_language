@@ -142,6 +142,14 @@ func (p *Parser) assign() *ast.Node {
 
 	if p.consume(token.ASSIGN) {
 		node = ast.NewNodeBinop(ast.ASSIGN, node, p.assign())
+	} else if p.consume(token.PA) {
+		node = ast.NewNodeBinop(ast.PA, node, p.add())
+	} else if p.consume(token.MA) {
+		node = ast.NewNodeBinop(ast.MA, node, p.add())
+	} else if p.consume(token.AA) {
+		node = ast.NewNodeBinop(ast.AA, node, p.add())
+	} else if p.consume(token.SA) {
+		node = ast.NewNodeBinop(ast.SA, node, p.add())
 	}
 
 	return node

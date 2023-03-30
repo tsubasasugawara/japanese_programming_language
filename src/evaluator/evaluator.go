@@ -157,6 +157,25 @@ func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
 	return Eval(obj.(*object.Function).Body, obj.(*object.Function).Env)
 }
 
+func evalExtendAssign(node *ast.Node, env *object.Environment, opeType ast.NodeKind) object.Object {
+	if node.Lhs == nil {
+		return newError("変数が宣言されていません")
+	}
+
+	lhs , ok := env.Get(node.Lhs.Ident)
+	if !ok {
+		return newError("変数が宣言されていません")
+	}
+	rhs := Eval(node.Rhs, env)
+
+	val := evalIntegerExpression(opeType, lhs, rhs)
+	if isError(val) {
+		return val
+	}
+	env.Set(node.Lhs.Ident, val)
+	return NULL
+}
+
 func Eval(node *ast.Node, env *object.Environment) object.Object {
 	switch node.NodeKind {
 	case ast.ASSIGN:
@@ -188,6 +207,14 @@ func Eval(node *ast.Node, env *object.Environment) object.Object {
 		return NULL
 	case ast.CALL:
 		return evalCallFunc(node, env)
+	case ast.PA:
+		return evalExtendAssign(node, env, ast.ADD)
+	case ast.MA:
+		return evalExtendAssign(node, env, ast.SUB)
+	case ast.AA:
+		return evalExtendAssign(node, env, ast.MUL)
+	case ast.SA:
+		return evalExtendAssign(node, env, ast.DIV)
 	}
 
 	lhs := Eval(node.Lhs, env)

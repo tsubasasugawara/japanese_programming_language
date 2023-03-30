@@ -15,6 +15,11 @@ const (
 	PARCENT // %, ％
 	ASSIGN // =
 
+	PA // +=, ＋＝ PLUS + ASSIGN
+	MA // -=,ー＝ MINUS + ASSIGN
+	SA // /=, ／＝ ÷＝ SLASH + ASSIGN
+	AA // *=, ＊＝ ×＝ ASTERISK + ASSIGN
+
 	GT // <, ＜
 	LT // >, ＞
 	GE // <=, ＜＝

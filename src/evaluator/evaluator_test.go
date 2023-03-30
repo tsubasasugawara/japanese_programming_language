@@ -299,3 +299,31 @@ func TestBlockComment(t *testing.T) {
 		t.Fatalf("got=%s expect%s\n", val, "800")
 	}
 }
+
+func TestExtendAssign(t *testing.T) {
+	input := `
+	a = 10
+	a += 1
+	a -= 2
+	a *= 3
+	a /= 27
+	a
+	`
+	head := token.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	Eval(program.Nodes[1], env)
+	Eval(program.Nodes[2], env)
+	Eval(program.Nodes[3], env)
+	Eval(program.Nodes[4], env)
+	v := Eval(program.Nodes[5], env)
+
+	if val := v.Inspect(); val != "1" {
+		t.Fatalf("got=%s expect=%s\n", val, "1")
+	}
+}

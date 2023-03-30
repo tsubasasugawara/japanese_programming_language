@@ -17,6 +17,14 @@ func tokenKindToString(kind TokenKind) string {
 		res = "SLASH"
 	case CALET:
 		res = "CALET"
+	case PA:
+		res = "PLUS+ASSIGN"
+	case MA:
+		res = "MINUS+ASSIGN"
+	case AA:
+		res = "ASTERISK+ASSIGN"
+	case SA:
+		res = "SLASH+ASSIGN"
 	case INTEGER:
 		res = "INTEGER"
 	case LPAREN:
@@ -51,7 +59,7 @@ func tokenKindToString(kind TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾ % ％
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾ % ％ += ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝
 	`
 
 	tests := []struct {
@@ -115,6 +123,16 @@ func TestToken(t *testing.T) {
 		{CALET, "＾"},
 		{PARCENT, "%"},
 		{PARCENT, "％"},
+		{PA, "+="},
+		{PA, "＋＝"},
+		{MA, "-="},
+		{MA, "ー＝"},
+		{AA, "*="},
+		{AA, "＊＝"},
+		{AA, "×＝"},
+		{SA, "/="},
+		{SA, "／＝"},
+		{SA, "÷＝"},
 		{EOF, ""},
 	}
 

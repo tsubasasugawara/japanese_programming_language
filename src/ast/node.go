@@ -14,6 +14,10 @@ const (
 	EXPONENT // べき乗
 	MODULUS // 剰余算
 	ASSIGN // 代入演算子
+	PA // PLUS(ADD)+ASSIGN
+	MA // MINUS(SUB)+ASSIGN
+	SA // SLASH(DIV)+ASSIGN
+	AA // ASTERISK(MUL)+ASSIGN
 
 	GT // 超過
 	GE // 以上

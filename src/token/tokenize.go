@@ -107,11 +107,26 @@ func Tokenize(input string) *Token {
 
 		switch l.ch {
 		case '+', '＋':
-			cur = newToken(PLUS, cur, string(l.ch))
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(PA, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(PLUS, cur, string(l.ch))
+			}
 		case '-', 'ー':
-			cur = newToken(MINUS, cur, string(l.ch))
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(MA, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(MINUS, cur, string(l.ch))
+			}
 		case '*', '＊', '×':
-			cur = newToken(ASTERISK, cur, string(l.ch))
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(AA, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(ASTERISK, cur, string(l.ch))
+			}
 		case '/', '／':
 			if ch := l.peekChar(); ch == '/' || ch == '／' {
 				for l.ch != '\n' {
@@ -128,11 +143,19 @@ func Tokenize(input string) *Token {
 					l.readChar()
 				}
 				l.readChar()
+			} else if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(SA, cur, string([]rune{l.ch, ch}))
+				l.readChar()
 			} else {
 				cur = newToken(SLASH, cur, string(l.ch))
 			}
 		case '÷':
-			cur = newToken(SLASH, cur, string(l.ch))
+			if ch := l.peekChar(); ch == '=' || ch == '＝' {
+				cur = newToken(SA, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = newToken(SLASH, cur, string(l.ch))
+			}
 		case '^', '＾':
 			cur = newToken(CALET, cur, string(l.ch))
 		case '%', '％':
