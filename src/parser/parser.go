@@ -201,6 +201,8 @@ func (p *Parser) mul() *ast.Node {
 			node = ast.NewNodeBinop(ast.MUL, node, p.unary())
 		} else if p.consume(token.SLASH) {
 			node = ast.NewNodeBinop(ast.DIV, node, p.unary())
+		} else if p.consume(token.CALET) {
+			node = ast.NewNodeBinop(ast.EXPONENT, node, p.unary())
 		} else {
 			return node
 		}

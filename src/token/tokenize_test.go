@@ -15,6 +15,8 @@ func tokenKindToString(kind TokenKind) string {
 		res = "ASTERISK"
 	case SLASH:
 		res = "SLASH"
+	case CALET:
+		res = "CALET"
 	case INTEGER:
 		res = "INTEGER"
 	case LPAREN:
@@ -49,7 +51,7 @@ func tokenKindToString(kind TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾
 	`
 
 	tests := []struct {
@@ -109,6 +111,8 @@ func TestToken(t *testing.T) {
 		{FUNC, "関数"},
 		{COMMA, ","},
 		{COMMA, "、"},
+		{CALET, "^"},
+		{CALET, "＾"},
 		{EOF, ""},
 	}
 

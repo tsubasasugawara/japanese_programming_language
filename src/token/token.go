@@ -7,10 +7,11 @@ const (
 
 	IDENT //識別子
 
-	PLUS     //+,＋
+	PLUS     // +,＋
 	MINUS    // -, ー
 	SLASH    // /,／,÷
 	ASTERISK // *,＊,×
+	CALET	 // ^, ＾
 	ASSIGN // =
 
 	GT // <, ＜

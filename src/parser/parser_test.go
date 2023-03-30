@@ -294,3 +294,30 @@ func TestFuncCall(t *testing.T) {
 		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "日本")
 	}
 }
+
+func TestExponent(t *testing.T) {
+	tests := []struct {
+		input string
+		lhs int
+		rhs int
+	} {
+		{"5^10", 5, 10},
+		{"５＾１０", 5, 10},
+	}
+
+	for i, v := range tests {
+		head := token.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		node := program.Nodes[0]
+		if node.NodeKind != ast.EXPONENT {
+			t.Fatalf("kind%d : got=%d expect=%d\n", i, node.NodeKind, ast.EXPONENT)
+		}
+		if node.Lhs.Num != v.lhs {
+			t.Fatalf("lhs%d : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
+		}
+		if node.Rhs.Num != v.rhs {
+			t.Fatalf("rhs%d : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		}
+	}
+}
