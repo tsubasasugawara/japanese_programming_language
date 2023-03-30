@@ -24,6 +24,10 @@ func TestOperator(t *testing.T) {
 		{"５/5", ast.DIV, 5, 5},
 		{"５／5", ast.DIV, 5, 5},
 		{"５÷45", ast.DIV, 5, 45},
+		{"5^10", ast.EXPONENT, 5, 10},
+		{"５＾１０", ast.EXPONENT, 5, 10},
+		{"5%3", ast.MODULUS, 5, 3},
+		{"５％３", ast.MODULUS, 5, 3},
 	}
 
 	for i, v := range tests {
@@ -292,32 +296,5 @@ func TestFuncCall(t *testing.T) {
 	}
 	if node.Params[1].Ident != "日本" {
 		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "日本")
-	}
-}
-
-func TestExponent(t *testing.T) {
-	tests := []struct {
-		input string
-		lhs int
-		rhs int
-	} {
-		{"5^10", 5, 10},
-		{"５＾１０", 5, 10},
-	}
-
-	for i, v := range tests {
-		head := token.Tokenize(v.input)
-		program, _ := Parse(head)
-
-		node := program.Nodes[0]
-		if node.NodeKind != ast.EXPONENT {
-			t.Fatalf("kind%d : got=%d expect=%d\n", i, node.NodeKind, ast.EXPONENT)
-		}
-		if node.Lhs.Num != v.lhs {
-			t.Fatalf("lhs%d : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
-		}
-		if node.Rhs.Num != v.rhs {
-			t.Fatalf("rhs%d : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
-		}
 	}
 }

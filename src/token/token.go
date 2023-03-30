@@ -12,6 +12,7 @@ const (
 	SLASH    // /,／,÷
 	ASTERISK // *,＊,×
 	CALET	 // ^, ＾
+	PARCENT // %, ％
 	ASSIGN // =
 
 	GT // <, ＜

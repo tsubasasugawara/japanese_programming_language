@@ -12,6 +12,7 @@ const (
 	MUL // 掛け算
 	DIV // 割り算
 	EXPONENT // べき乗
+	MODULUS // 剰余算
 	ASSIGN // 代入演算子
 
 	GT // 超過

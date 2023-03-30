@@ -55,6 +55,8 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 		return &object.Integer{Value: lval / rval}
 	case ast.EXPONENT:
 		return &object.Integer{Value: int(math.Pow(float64(lval), float64(rval)))}
+	case ast.MODULUS:
+		return &object.Integer{Value: lval % rval}
 	case ast.EQ:
 		return &object.Boolean{Value: lval == rval}
 	case ast.NOT_EQ:

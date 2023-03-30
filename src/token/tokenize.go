@@ -135,6 +135,8 @@ func Tokenize(input string) *Token {
 			cur = newToken(SLASH, cur, string(l.ch))
 		case '^', '＾':
 			cur = newToken(CALET, cur, string(l.ch))
+		case '%', '％':
+			cur = newToken(PARCENT, cur, string(l.ch))
 		case '(', '（', '「':
 			cur = newToken(LPAREN, cur, string(l.ch))
 		case ')', '）', '」':
