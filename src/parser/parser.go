@@ -285,16 +285,18 @@ func (p *Parser) parseParen() *ast.Node {
 		return nil
 	}
 
-	if len(expressions) == 1 && p.expect(token.RPAREN) && !p.curTokenIs(token.IDENT) {
-		return expressions[0]
-	} else if p.expect(token.RPAREN) && p.curTokenIs(token.IDENT) {
-		node := ast.NewNode(ast.CALL)
-		node.Ident = p.curToken.Literal
-		p.nextToken()
-		for _, v := range expressions {
-			node.Params = append(node.Params, v)
+	if p.expect(token.RPAREN) {
+		if len(expressions) == 1 && !p.curTokenIs(token.IDENT) {
+			return expressions[0]
+		} else if p.curTokenIs(token.IDENT) {
+			node := ast.NewNode(ast.CALL)
+			node.Ident = p.curToken.Literal
+			p.nextToken()
+			for _, v := range expressions {
+				node.Params = append(node.Params, v)
+			}
+			return node
 		}
-		return node
 	}
 	
 	err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
