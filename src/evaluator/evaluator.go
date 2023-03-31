@@ -77,16 +77,14 @@ func evalIfStatement(node *ast.Node, env *object.Environment) object.Object {
 	}
 
 	if isTruthly(condition) {
-		return Eval(node.Then, env)
+		Eval(node.Then, env)
 	} else if node.Else != nil {
-		return Eval(node.Else, env)
+		Eval(node.Else, env)
 	}
 	return NULL
 }
 
 func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
-	var fnode object.Object
-
 	for {
 		condition := Eval(node.Condition, env)
 		if isError(condition) {
@@ -94,9 +92,9 @@ func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
 		}
 
 		if isTruthly(condition) {
-			fnode = Eval(node.Then, env)
+			Eval(node.Then, env)
 		} else {
-			return fnode
+			return NULL
 		}
 	}
 }
@@ -126,11 +124,9 @@ func evalBlock(node *ast.Node, env *object.Environment) object.Object {
 
 func genFuncObj(node *ast.Node, env *object.Environment) object.Object {
 	funcObj := &object.Function{}
-	funcObj.Env = object.NewEnclosedEnvironment(env)
 
 	for _, v := range node.Params {
 		funcObj.Params = append(funcObj.Params, v)
-		funcObj.Env.Set(v.Ident, NULL)
 	}
 
 	funcObj.Body = node.Body
@@ -138,6 +134,19 @@ func genFuncObj(node *ast.Node, env *object.Environment) object.Object {
 }
 
 func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
+	builtin, ok := builtins[node.Ident]
+	if ok {
+		params := []object.Object{}
+		for _, v := range node.Params {
+			p := Eval(v, env)
+			if isError(p) {
+				return p
+			}
+			params = append(params, p)
+		}
+		return builtin.Fn(params...)
+	}
+
 	obj, ok := env.Get(node.Ident)
 	if !ok || obj.Type() != object.FUNCTION {
 		return newError("関数が宣言されていません。")
@@ -146,15 +155,20 @@ func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
 		return newError("引数の個数が正しくありません。")
 	}
 
+	callEnv := object.NewEnclosedEnvironment(env)
 	for i, v := range obj.(*object.Function).Params {
 		p := Eval(node.Params[i], env)
 		if isError(p) {
 			return p
 		}
-		obj.(*object.Function).Env.Set(v.Ident, p)
+		callEnv.SetCurrentEnv(v.Ident, p)
 	}
 
-	return Eval(obj.(*object.Function).Body, obj.(*object.Function).Env)
+	res := Eval(obj.(*object.Function).Body, callEnv)
+	if res != nil {
+		return res.(*object.ReturnValue).Value
+	}
+	return NULL
 }
 
 func evalExtendAssign(node *ast.Node, env *object.Environment, opeType ast.NodeKind) object.Object {

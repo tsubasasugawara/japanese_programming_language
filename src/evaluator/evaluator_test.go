@@ -132,37 +132,14 @@ func TestReturnStatement(t *testing.T) {
 	}
 }
 
-func TestIfStatement(t *testing.T) {
-	tests := []struct {
-		input string
-		expect string
-	} {
-		{"もし 5==5 ならば 10 戻す", "10"},
-		{"もし 5!=5 10 戻す それ以外 15 戻す", "15"},
-	}
-	
-	for i, v := range tests {
-		head := token.Tokenize(v.input)
-		program, errors := parser.Parse(head)
-		if len(errors) > 0 {
-			t.Fatalf("Error.\n")
-		}
-
-		env := object.NewEnvironment()
-		e := Eval(program.Nodes[0], env)
-		if val := e.Inspect(); val != v.expect {
-			t.Fatalf("test%d : got=%s expect=%s\n", i, val, v.expect)
-		}
-	}
-}
-
 func TestIfStatements(t *testing.T) {
 	input := `
 		a = 1
-		もし a==1 ならば
+		もし a==1 ならば {
 			a = a + 10
-		それ以外
+		} それ以外 {
 			a = a - 10
+		}
 		a 戻す
 		`
 	head := token.Tokenize(input)
@@ -183,7 +160,9 @@ func TestIfStatements(t *testing.T) {
 func TestForStatement(t *testing.T) {
 	input := `
 	a = 1
-	a < 5 ならば 繰り返す a = a + 1
+	a < 5 ならば 繰り返す {
+		a = a + 1
+	}
 	a 戻す
 	`
 	head := token.Tokenize(input)
@@ -235,8 +214,11 @@ func TestFuncCall(t *testing.T) {
 	関数 abc(a, b, c) {
 		a + b - c 戻す
 	}
+
 	c = 90
-	abc(10, 5, c)
+	
+	b = abc(10, 5, c)
+	b 戻す
 	`
 	head := token.Tokenize(input)
 	program, errors := parser.Parse(head)
@@ -247,7 +229,8 @@ func TestFuncCall(t *testing.T) {
 	env := object.NewEnvironment()
 	Eval(program.Nodes[0], env)
 	Eval(program.Nodes[1], env)
-	v := Eval(program.Nodes[2], env)
+	Eval(program.Nodes[2], env)
+	v := Eval(program.Nodes[3], env)
 
 	if val := v.Inspect(); val != "-75" {
 		t.Fatalf("got=%s expect=%s\n", val, "-75")

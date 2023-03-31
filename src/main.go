@@ -2,17 +2,24 @@ package main
 
 import (
 	"fmt"
-	"jpl/repl"
 	"os"
 	"os/user"
+
+	"jpl/repl"
+	"jpl/reader"
 )
 
 func main() {
-	user, err := user.Current()
-	if err != nil {
-		panic(err)
+	if len(os.Args) == 1 {
+		user, err := user.Current()
+		if err != nil {
+			panic(err)
+		}
+		
+		fmt.Printf("Hello %s!\n", user.Username)
+		repl.Start(os.Stdin, os.Stdout)
+	} else {
+		path := os.Args[1]
+		reader.Read(path)
 	}
-
-	fmt.Printf("Hello %s!\n", user.Username)
-	repl.Start(os.Stdin, os.Stdout)
 }

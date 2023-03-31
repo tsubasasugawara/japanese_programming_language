@@ -16,7 +16,10 @@ const (
 	NULL = "NULL"
 	RETURN_VALUE = "RETURN_VALUE"
 	FUNCTION = "FUNCTION"
+	BUILTIN = "BUILTIN"
 )
+
+type BuiltinFunction func(args ...Object) Object
 
 type Object interface {
 	Type() ObjectType
@@ -74,7 +77,6 @@ func (r *ReturnValue) Inspect() string {
 type Function struct {
 	Params []*ast.Node
 	Body *ast.Node
-	Env *Environment
 }
 func (f *Function) Type() ObjectType {
 	return FUNCTION
@@ -86,4 +88,14 @@ func (f *Function) Inspect() string {
 	}
 
 	return fmt.Sprintf("関数(%s)\n", strings.Join(params, ","))
+}
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+func (b *Builtin) Type() string {
+	return BUILTIN
+}
+func (b * Builtin) Inspect() string {
+	return "buitin function"
 }

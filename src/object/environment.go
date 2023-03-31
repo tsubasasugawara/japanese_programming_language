@@ -40,3 +40,8 @@ func (e *Environment) Set(name string, val Object) Object {
 	curEnv.store[name] = val
 	return val
 }
+
+func (e *Environment) SetCurrentEnv(name string, val Object) Object {
+	e.store[name] = val
+	return val
+}
