@@ -249,7 +249,7 @@ func (p *Parser) primary() *ast.Node {
 			return node
 		}
 
-		if !p.expect(token.RPAREN) && p.curTokenIs(token.EOF) {
+		if p.curTokenIs(token.EOF) {
 			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			p.appendError(err)
 			return nil
@@ -273,35 +273,37 @@ func (p *Parser) primary() *ast.Node {
 				p.consume(token.COMMA)
 			}
 
-			if !p.expect(token.RPAREN) {
-				err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-				p.appendError(err)
-				return nil
+			if p.expect(token.RPAREN) {
+				return node
 			}
 
-			return node
+			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
+			p.appendError(err)
+			return nil
 		}
 
 		node := ast.NewIdentNode(identifier)
 		return node
 	}
 
-	if p.curToken != nil && p.curToken.Kind != token.EOF {
+	if p.curToken != nil && p.curToken.Kind != token.EOF && p.curToken.Kind != token.ILLEGAL {
 		str := utils.ToLower(p.curToken.Literal)
 		num, err := strconv.Atoi(str)
+		var node *ast.Node
 		if err != nil {
-			e := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "整数が必要です。 取得した文字=%s", str)
+			e := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "数値が必要です。 取得した文字=%s", str)
 			p.appendError(e)
-			p.nextToken()
-			return nil
+		} else {
+			node = ast.NewIntegerNode(num)
 		}
 		p.nextToken()
-		return ast.NewIntegerNode(num)
+		return node
 	}
 
 	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
 		err := ast.NewSyntaxError(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
 		p.appendError(err)
+		p.nextToken()
 	} else {
 		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "式が必要です。")
 		p.appendError(err)
