@@ -214,10 +214,13 @@ func TestFuncCall(t *testing.T) {
 	関数 abc(a, b, c) {
 		a + b - c 戻す
 	}
+	関数 「あ、い」足す ｛
+		あ＋い 戻す
+	｝
 
 	c = 90
 	
-	b = abc(10, 5, c)
+	b = abc(10, 足す(2,3), c)
 	b 戻す
 	`
 	head := token.Tokenize(input)
@@ -230,7 +233,8 @@ func TestFuncCall(t *testing.T) {
 	Eval(program.Nodes[0], env)
 	Eval(program.Nodes[1], env)
 	Eval(program.Nodes[2], env)
-	v := Eval(program.Nodes[3], env)
+	Eval(program.Nodes[3], env)
+	v := Eval(program.Nodes[4], env)
 
 	if val := v.Inspect(); val != "-75" {
 		t.Fatalf("got=%s expect=%s\n", val, "-75")

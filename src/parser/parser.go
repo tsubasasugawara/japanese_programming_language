@@ -47,17 +47,24 @@ func (p *Parser) expect(tokenKind token.TokenKind) bool {
 	return false
 }
 
+// TODO: シンタックスエラーを内部で作成
 func (p *Parser) appendError(err ast.Error) {
 	p.Errors = append(p.Errors, err)
 }
 
-func (p *Parser) program() *ast.Node {
-	if p.consume(token.FUNC) {
-		if !p.curTokenIs(token.IDENT) {
-			err := ast.NewSyntaxError(ast.MISSING_FUNCTION_NAME, "関数名が必要です。")
-			p.appendError(err);
-			return nil
-		}
+func (p *Parser) parseFunctionParams() []*ast.Node {
+	params := []*ast.Node{}
+	for p.curTokenIs(token.IDENT) && !p.curTokenIs(token.EOF) {
+		ident := ast.NewIdentNode(p.curToken.Literal)
+		params = append(params, ident)
+		p.nextToken()
+		p.consume(token.COMMA)
+	}
+	return params
+}
+
+func (p *Parser) parseFunction() *ast.Node {
+	if p.curTokenIs(token.IDENT) {
 		funcNode := ast.NewNode(ast.FUNC)
 		funcNode.Ident = p.curToken.Literal
 		p.nextToken()
@@ -67,12 +74,7 @@ func (p *Parser) program() *ast.Node {
 			p.appendError(err)
 			return nil
 		}
-		for p.curTokenIs(token.IDENT) {
-			ident := ast.NewIdentNode(p.curToken.Literal)
-			funcNode.Params = append(funcNode.Params, ident)
-			p.nextToken()
-			p.consume(token.COMMA)
-		}
+		funcNode.Params = p.parseFunctionParams()
 		if !p.expect(token.RPAREN) {
 			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			p.appendError(err)
@@ -81,6 +83,36 @@ func (p *Parser) program() *ast.Node {
 
 		funcNode.Body = p.stmt()
 		return funcNode
+	} else if p.consume(token.LPAREN) {
+		funcNode := ast.NewNode(ast.FUNC)
+
+		funcNode.Params = p.parseFunctionParams()
+		if !p.expect(token.RPAREN) {
+			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
+			p.appendError(err)
+			return nil
+		}
+
+		if !p.curTokenIs(token.IDENT) {
+			err := ast.NewSyntaxError(ast.MISSING_FUNCTION_NAME, "関数名が必要です。")
+			p.appendError(err);
+			return nil
+		}
+
+		funcNode.Ident = p.curToken.Literal
+		p.nextToken()
+		funcNode.Body = p.stmt()
+		return funcNode
+	}
+
+	err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+	p.appendError(err);
+	return nil
+}
+
+func (p *Parser) program() *ast.Node {
+	if p.consume(token.FUNC) {
+		return p.parseFunction()
 	}
 
 	return p.stmt()
@@ -228,36 +260,51 @@ func (p *Parser) unary() *ast.Node {
 	return p.primary()
 }
 
-func (p *Parser) primary() *ast.Node {
-	if p.consume(token.LPAREN) {
-		if p.consume(token.RPAREN) {
-			err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "式が必要です。")
-			p.appendError(err)
-			return nil
-		}
-
-		node := p.expr()
-		if node == nil {
-			if !p.consume(token.RPAREN) {
-				err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-				p.appendError(err)
-			}
-			return nil
-		}
-
-		if p.expect(token.RPAREN) {
+func (p *Parser) parseParen() *ast.Node {
+	if p.consume(token.RPAREN) {
+		if p.curTokenIs(token.IDENT) {
+			node := ast.NewNode(ast.CALL)
+			node.Ident = p.curToken.Literal
+			p.nextToken()
 			return node
 		}
-
-		if p.curTokenIs(token.EOF) {
-			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			p.appendError(err)
-			return nil
-		}
-
-		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "式が必要です。")
 		p.appendError(err)
+		return nil
+	}
+
+	expressions := []*ast.Node{}
+	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
+		expressions  = append(expressions, p.expr())
+		p.consume(token.COMMA)
+	}
+
+	if p.curTokenIs(token.EOF) {
+		err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
+		p.appendError(err)
+		return nil
+	}
+
+	if len(expressions) == 1 && p.expect(token.RPAREN) && !p.curTokenIs(token.IDENT) {
+		return expressions[0]
+	} else if p.expect(token.RPAREN) && p.curTokenIs(token.IDENT) {
+		node := ast.NewNode(ast.CALL)
+		node.Ident = p.curToken.Literal
+		p.nextToken()
+		for _, v := range expressions {
+			node.Params = append(node.Params, v)
+		}
 		return node
+	}
+	
+	err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+	p.appendError(err)
+	return nil
+}
+
+func (p *Parser) primary() *ast.Node {
+	if p.consume(token.LPAREN) {
+		return p.parseParen()
 	}
 
 	if p.curTokenIs(token.IDENT) {
