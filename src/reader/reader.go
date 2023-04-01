@@ -32,6 +32,9 @@ func Read(path string) {
 	}
 			
 	for _, v := range program.Nodes {
-		evaluator.Eval(v, env)
+		res := evaluator.Eval(v, env)
+		if res.Type() == object.ERROR {
+			fmt.Println(res.Inspect())
+		}
 	}
 }

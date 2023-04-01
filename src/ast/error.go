@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-type SyntaxErrorCategory string
 const (
-	MISSING_RPAREN SyntaxErrorCategory	= "括弧が閉じていません"
+	// シンタックスエラー
+	MISSING_RPAREN 						= "括弧が閉じていません"
 	MISSING_RBRACE 						= "括弧が閉じていません"
 	MISSING_FUNCTION_NAME 				= "関数名が指定されていません"
 
@@ -15,23 +15,25 @@ const (
 )
 
 type Error interface {
+	Type() string
+	Category() string
 	Message() string
 }
 
 type SyntaxError struct {
-	category SyntaxErrorCategory
+	category string
 	msg string
 }
-func (s *SyntaxError) Type() SyntaxErrorCategory {
+func (s *SyntaxError) Type() string {
 	return "シンタックスエラー"
 }
-func (s *SyntaxError) Category() SyntaxErrorCategory {
+func (s *SyntaxError) Category() string {
 	return s.category
 }
 func (s *SyntaxError) Message() string {
 	return s.msg
 }
-func NewSyntaxError(category SyntaxErrorCategory, format string, args ...interface{}) *SyntaxError {
+func NewSyntaxError(category string, format string, args ...interface{}) *SyntaxError {
 	s := &SyntaxError{
 		category : category,
 		msg : fmt.Sprintf(format, args...),

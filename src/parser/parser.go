@@ -47,8 +47,8 @@ func (p *Parser) expect(tokenKind token.TokenKind) bool {
 	return false
 }
 
-// TODO: シンタックスエラーを内部で作成
-func (p *Parser) appendError(err ast.Error) {
+func (p *Parser) error(category string, format string, args ...interface{}) {
+	err := ast.NewSyntaxError(category, format, args...)
 	p.Errors = append(p.Errors, err)
 }
 
@@ -70,14 +70,12 @@ func (p *Parser) parseFunction() *ast.Node {
 		p.nextToken()
 
 		if !p.expect(token.LPAREN) {
-			err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "括弧が必要です。")
-			p.appendError(err)
+			p.error(ast.UNEXPECTED_TOKEN, "括弧が必要です。")
 			return nil
 		}
 		funcNode.Params = p.parseFunctionParams()
 		if !p.expect(token.RPAREN) {
-			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			p.appendError(err)
+			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			return nil
 		}
 
@@ -88,14 +86,12 @@ func (p *Parser) parseFunction() *ast.Node {
 
 		funcNode.Params = p.parseFunctionParams()
 		if !p.expect(token.RPAREN) {
-			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			p.appendError(err)
+			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			return nil
 		}
 
 		if !p.curTokenIs(token.IDENT) {
-			err := ast.NewSyntaxError(ast.MISSING_FUNCTION_NAME, "関数名が必要です。")
-			p.appendError(err);
+			p.error(ast.MISSING_FUNCTION_NAME, "関数名が必要です。");
 			return nil
 		}
 
@@ -105,8 +101,7 @@ func (p *Parser) parseFunction() *ast.Node {
 		return funcNode
 	}
 
-	err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
-	p.appendError(err);
+	p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal);
 	return nil
 }
 
@@ -140,8 +135,7 @@ func (p *Parser) stmt() *ast.Node {
 		node := ast.NewNode(ast.BLOCK)
 		for !p.consume(token.RBRACE) {
 			if p.curToken == nil || p.curTokenIs(token.EOF) {
-				err := ast.NewSyntaxError(ast.MISSING_RBRACE, "括弧を閉じてください。")
-				p.appendError(err)
+				p.error(ast.MISSING_RBRACE, "括弧を閉じてください。")
 				return nil
 			}
 			node.Stmts = append(node.Stmts, p.stmt())
@@ -268,8 +262,7 @@ func (p *Parser) parseParen() *ast.Node {
 			p.nextToken()
 			return node
 		}
-		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "式が必要です。")
-		p.appendError(err)
+		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 		return nil
 	}
 
@@ -280,8 +273,7 @@ func (p *Parser) parseParen() *ast.Node {
 	}
 
 	if p.curTokenIs(token.EOF) {
-		err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-		p.appendError(err)
+		p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
 		return nil
 	}
 
@@ -299,8 +291,7 @@ func (p *Parser) parseParen() *ast.Node {
 		}
 	}
 	
-	err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
-	p.appendError(err)
+	p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
 	return nil
 }
 
@@ -326,8 +317,7 @@ func (p *Parser) primary() *ast.Node {
 				return node
 			}
 
-			err := ast.NewSyntaxError(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			p.appendError(err)
+			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
 			return nil
 		}
 
@@ -340,8 +330,7 @@ func (p *Parser) primary() *ast.Node {
 		num, err := strconv.Atoi(str)
 		var node *ast.Node
 		if err != nil {
-			e := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "数値が必要です。 取得した文字=%s", str)
-			p.appendError(e)
+			p.error(ast.UNEXPECTED_TOKEN, "数値が必要です。 取得した文字=%s", str)
 		} else {
 			node = ast.NewIntegerNode(num)
 		}
@@ -350,12 +339,10 @@ func (p *Parser) primary() *ast.Node {
 	}
 
 	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
-		err := ast.NewSyntaxError(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
-		p.appendError(err)
+		p.error(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
 		p.nextToken()
 	} else {
-		err := ast.NewSyntaxError(ast.UNEXPECTED_TOKEN, "式が必要です。")
-		p.appendError(err)
+		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 	}
 	return nil
 }
