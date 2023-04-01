@@ -19,6 +19,20 @@ func newParser(head *token.Token) *Parser {
 	return p
 }
 
+func Parse(head *token.Token) (*ast.Program, []ast.Error) {
+	p := newParser(head)
+	program := ast.NewProgram()
+
+	for !p.curTokenIs(token.EOF) {
+		node := p.program()
+		if node != nil {
+			program.Nodes = append(program.Nodes, node)
+		}
+	}
+
+	return program, p.Errors
+}
+
 func (p *Parser) nextToken() {
 	p.curToken = p.curToken.Next
 }
@@ -41,58 +55,7 @@ func (p *Parser) error(category string, format string, args ...interface{}) {
 	p.Errors = append(p.Errors, err)
 }
 
-func (p *Parser) parseFunctionParams() []*ast.Node {
-	params := []*ast.Node{}
-	for p.curTokenIs(token.IDENT) && !p.curTokenIs(token.EOF) {
-		ident := ast.NewIdentNode(p.curToken.Literal)
-		params = append(params, ident)
-		p.nextToken()
-		p.expect(token.COMMA)
-	}
-	return params
-}
-
-func (p *Parser) parseFunction() *ast.Node {
-	if p.curTokenIs(token.IDENT) {
-		funcNode := ast.NewNode(ast.FUNC)
-		funcNode.Ident = p.curToken.Literal
-		p.nextToken()
-
-		if !p.expect(token.LPAREN) {
-			p.error(ast.UNEXPECTED_TOKEN, "括弧が必要です。")
-			return nil
-		}
-		funcNode.Params = p.parseFunctionParams()
-		if !p.expect(token.RPAREN) {
-			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			return nil
-		}
-
-		funcNode.Body = p.stmt()
-		return funcNode
-	} else if p.expect(token.LPAREN) {
-		funcNode := ast.NewNode(ast.FUNC)
-
-		funcNode.Params = p.parseFunctionParams()
-		if !p.expect(token.RPAREN) {
-			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			return nil
-		}
-
-		if !p.curTokenIs(token.IDENT) {
-			p.error(ast.MISSING_FUNCTION_NAME, "関数名が必要です。");
-			return nil
-		}
-
-		funcNode.Ident = p.curToken.Literal
-		p.nextToken()
-		funcNode.Body = p.stmt()
-		return funcNode
-	}
-
-	p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal);
-	return nil
-}
+/*--------------------------------- 構文解析 ---------------------------------*/
 
 func (p *Parser) program() *ast.Node {
 	if p.expect(token.FUNC) {
@@ -104,45 +67,23 @@ func (p *Parser) program() *ast.Node {
 
 func (p *Parser) stmt() *ast.Node {
 	if p.expect(token.IF) {
-		node := ast.NewNode(ast.IF)
-		node.Condition = p.expr()
-		if node.Condition == nil {
-			return nil
-		}
-		p.expect(token.THEN)
-
-		node.Then = p.stmt()
-		if node.Then == nil {
-			return nil
-		}
-
-		if p.expect(token.ELSE) {
-			node.Else = p.stmt()
-		}
-		return node
+		return p.parseIfStmt()
 	} else if p.expect(token.LBRACE) {
-		node := ast.NewNode(ast.BLOCK)
-		for !p.expect(token.RBRACE) {
-			if p.curToken == nil || p.curTokenIs(token.EOF) {
-				p.error(ast.MISSING_RBRACE, "括弧を閉じてください。")
-				return nil
-			}
-			node.Stmts = append(node.Stmts, p.stmt())
-		}
-		return node
+		return p.parseBlockStmt()
 	}
 
 	node := p.expr()
+	if node == nil {
+		return node
+	}
 
-	if p.expect(token.THEN) && p.expect(token.FOR) {
-		fNode := ast.NewNode(ast.FOR)
-		fNode.Condition = node
-		fNode.Then = p.stmt()
-		return fNode
+	p.expect(token.THEN)
+	if p.expect(token.FOR) {
+		return p.parseForStmt(node)
 	}
 
 	if p.expect(token.RETURN) {
-		node = ast.NewNodeBinop(ast.RETURN, node, nil)
+		return ast.NewNodeBinop(ast.RETURN, node, nil)
 	}
 
 	return node
@@ -243,12 +184,140 @@ func (p *Parser) unary() *ast.Node {
 	return p.primary()
 }
 
+func (p *Parser) primary() *ast.Node {
+	if p.expect(token.LPAREN) {
+		return p.parseParen()
+	}
+
+	if p.curTokenIs(token.IDENT) {
+		node := p.parseIdentifier()
+		if p.expect(token.LPAREN) {
+			return p.parseCallFunc(node)
+		}
+		return node
+	}
+
+	if p.curToken != nil && p.curTokenIs(token.INTEGER) {
+		return p.parseInteger()
+	}
+
+	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
+		p.error(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
+		p.nextToken()
+	} else {
+		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
+	}
+	return nil
+}
+
+// 宣言された関数の、引数を解析する
+func (p *Parser) parseFunctionParams() []*ast.Node {
+	params := []*ast.Node{}
+	for p.curTokenIs(token.IDENT) && !p.curTokenIs(token.EOF) {
+		ident := ast.NewIdentNode(p.curToken.Literal)
+		params = append(params, ident)
+		p.nextToken()
+		p.expect(token.COMMA)
+	}
+	return params
+}
+
+// 関数　<関数名>(引数...) {}
+func (p *Parser) parsePreIdentFunc() *ast.Node {
+	funcNode := p.parseIdentifier()
+
+	if !p.expect(token.LPAREN) {
+		p.error(ast.UNEXPECTED_TOKEN, "括弧が必要です。")
+		return nil
+	}
+
+	params := p.parseFunctionParams()
+
+	if !p.expect(token.RPAREN) {
+		p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
+		return nil
+	}
+
+	funcNode.NodeKind = ast.FUNC
+	funcNode.Params = params
+	funcNode.Body = p.stmt()
+	return funcNode
+}
+
+// 関数 (引数...)<関数名> {}
+func (p *Parser) parsePostIdentFunc() *ast.Node {
+	params := p.parseFunctionParams()
+	if !p.expect(token.RPAREN) {
+		p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
+		return nil
+	}
+
+	if !p.curTokenIs(token.IDENT) {
+		p.error(ast.MISSING_FUNCTION_NAME, "関数名が必要です。");
+		return nil
+	}
+
+	funcNode := p.parseIdentifier()
+	funcNode.NodeKind = ast.FUNC
+	funcNode.Body = p.stmt()
+	funcNode.Params = params
+	return funcNode
+}
+
+func (p *Parser) parseFunction() *ast.Node {
+	if p.curTokenIs(token.IDENT) {
+		return p.parsePreIdentFunc()
+	} else if p.expect(token.LPAREN) {
+		return p.parsePostIdentFunc()
+	}
+
+	p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal);
+	return nil
+}
+
+func (p *Parser) parseIfStmt() *ast.Node {
+	node := ast.NewNode(ast.IF)
+	node.Condition = p.expr()
+	if node.Condition == nil {
+		return nil
+	}
+	p.expect(token.THEN)
+
+	node.Then = p.stmt()
+	if node.Then == nil {
+		return nil
+	}
+
+	if p.expect(token.ELSE) {
+		node.Else = p.stmt()
+	}
+	return node
+}
+
+func (p *Parser) parseBlockStmt() *ast.Node {
+	node := ast.NewNode(ast.BLOCK)
+	for !p.expect(token.RBRACE) {
+		if p.curToken == nil || p.curTokenIs(token.EOF) {
+			p.error(ast.MISSING_RBRACE, "括弧を閉じてください。")
+			return nil
+		}
+		node.Stmts = append(node.Stmts, p.stmt())
+	}
+	return node
+}
+
+func (p *Parser) parseForStmt(node *ast.Node) *ast.Node {
+	fNode := ast.NewNode(ast.FOR)
+	fNode.Condition = node
+	fNode.Then = p.stmt()
+	return fNode
+}
+
 func (p *Parser) parseParen() *ast.Node {
 	if p.expect(token.RPAREN) {
 		if p.curTokenIs(token.IDENT) {
-			node := ast.NewNode(ast.CALL)
-			node.Ident = p.curToken.Literal
-			p.nextToken()
+			node := p.parseIdentifier()
+			node.NodeKind = ast.CALL
 			return node
 		}
 		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
@@ -270,9 +339,8 @@ func (p *Parser) parseParen() *ast.Node {
 		if len(expressions) == 1 && !p.curTokenIs(token.IDENT) {
 			return expressions[0]
 		} else if p.curTokenIs(token.IDENT) {
-			node := ast.NewNode(ast.CALL)
-			node.Ident = p.curToken.Literal
-			p.nextToken()
+			node := p.parseIdentifier()
+			node.NodeKind = ast.CALL
 			for _, v := range expressions {
 				node.Params = append(node.Params, v)
 			}
@@ -284,68 +352,33 @@ func (p *Parser) parseParen() *ast.Node {
 	return nil
 }
 
-func (p *Parser) primary() *ast.Node {
-	if p.expect(token.LPAREN) {
-		return p.parseParen()
-	}
-
-	if p.curTokenIs(token.IDENT) {
-		identifier := p.curToken.Literal
-		p.nextToken()
-
-		if p.expect(token.LPAREN) {
-			node := ast.NewNode(ast.CALL)
-			node.Ident = identifier
-
-			for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
-				node.Params = append(node.Params, p.expr()) 
-				p.expect(token.COMMA)
-			}
-
-			if p.expect(token.RPAREN) {
-				return node
-			}
-
-			p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
-			return nil
-		}
-
-		node := ast.NewIdentNode(identifier)
-		return node
-	}
-
-	if p.curToken != nil && p.curToken.Kind != token.EOF && p.curToken.Kind != token.ILLEGAL {
-		str := utils.ToLower(p.curToken.Literal)
-		num, err := strconv.Atoi(str)
-		var node *ast.Node
-		if err != nil {
-			p.error(ast.UNEXPECTED_TOKEN, "数値が必要です。 取得した文字=%s", str)
-		} else {
-			node = ast.NewIntegerNode(num)
-		}
-		p.nextToken()
-		return node
-	}
-
-	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
-		p.error(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
-		p.nextToken()
-	} else {
-		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
-	}
-	return nil
+func (p *Parser) parseInteger() *ast.Node {
+	str := utils.ToLower(p.curToken.Literal)
+	num, _ := strconv.Atoi(str)
+	node := ast.NewIntegerNode(num)
+	p.nextToken()
+	return node
 }
-	
-func Parse(head *token.Token) (*ast.Program, []ast.Error) {
-	p := newParser(head)
-	program := ast.NewProgram()
 
-	for !p.curTokenIs(token.EOF) {
-		node := p.program()
-		if node != nil {
-			program.Nodes = append(program.Nodes, node)
-		}
+func (p *Parser) parseIdentifier() *ast.Node {
+	node := ast.NewIdentNode(p.curToken.Literal)
+	p.nextToken()
+	return node
+}
+
+// parseIdentifierで返ってきたnodeを引数に使用する
+func (p *Parser) parseCallFunc(node *ast.Node) *ast.Node {
+	node.NodeKind = ast.CALL
+
+	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
+		node.Params = append(node.Params, p.expr())
+		p.expect(token.COMMA)
 	}
 
-	return program, p.Errors
+	if p.expect(token.RPAREN) {
+		return node
+	}
+
+	p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
+	return nil
 }

@@ -27,7 +27,7 @@ func (l *Lexer) peekChar() rune {
 }
 
 func (l *Lexer) skipSpecialChar() {
-	for l.ch == '\n' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' {
+	for l.ch == '\n' || l.ch == '\r' || l.ch == '\t' || l.ch == ' ' || l.ch == '　' {
 		l.readChar()
 	}
 }
