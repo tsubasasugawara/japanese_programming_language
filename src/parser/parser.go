@@ -27,17 +27,6 @@ func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
 	return p.curToken != nil && p.curToken.Kind == tokenKind
 }
 
-func (p *Parser) consume(tokenKind token.TokenKind) bool {
-	if p.curTokenIs(token.INTEGER) ||
-		p.curTokenIs(token.EOF) ||
-		!p.curTokenIs(tokenKind) {
-			return false
-		}
-
-	p.nextToken()
-	return true
-}
-
 func (p *Parser) expect(tokenKind token.TokenKind) bool {
 	if p.curTokenIs(tokenKind) {
 		p.nextToken()
@@ -58,7 +47,7 @@ func (p *Parser) parseFunctionParams() []*ast.Node {
 		ident := ast.NewIdentNode(p.curToken.Literal)
 		params = append(params, ident)
 		p.nextToken()
-		p.consume(token.COMMA)
+		p.expect(token.COMMA)
 	}
 	return params
 }
@@ -81,7 +70,7 @@ func (p *Parser) parseFunction() *ast.Node {
 
 		funcNode.Body = p.stmt()
 		return funcNode
-	} else if p.consume(token.LPAREN) {
+	} else if p.expect(token.LPAREN) {
 		funcNode := ast.NewNode(ast.FUNC)
 
 		funcNode.Params = p.parseFunctionParams()
@@ -106,7 +95,7 @@ func (p *Parser) parseFunction() *ast.Node {
 }
 
 func (p *Parser) program() *ast.Node {
-	if p.consume(token.FUNC) {
+	if p.expect(token.FUNC) {
 		return p.parseFunction()
 	}
 
@@ -114,26 +103,26 @@ func (p *Parser) program() *ast.Node {
 }
 
 func (p *Parser) stmt() *ast.Node {
-	if p.consume(token.IF) {
+	if p.expect(token.IF) {
 		node := ast.NewNode(ast.IF)
 		node.Condition = p.expr()
 		if node.Condition == nil {
 			return nil
 		}
-		p.consume(token.THEN)
+		p.expect(token.THEN)
 
 		node.Then = p.stmt()
 		if node.Then == nil {
 			return nil
 		}
 
-		if p.consume(token.ELSE) {
+		if p.expect(token.ELSE) {
 			node.Else = p.stmt()
 		}
 		return node
-	} else if p.consume(token.LBRACE) {
+	} else if p.expect(token.LBRACE) {
 		node := ast.NewNode(ast.BLOCK)
-		for !p.consume(token.RBRACE) {
+		for !p.expect(token.RBRACE) {
 			if p.curToken == nil || p.curTokenIs(token.EOF) {
 				p.error(ast.MISSING_RBRACE, "括弧を閉じてください。")
 				return nil
@@ -145,14 +134,14 @@ func (p *Parser) stmt() *ast.Node {
 
 	node := p.expr()
 
-	if p.consume(token.THEN) && p.consume(token.FOR) {
+	if p.expect(token.THEN) && p.expect(token.FOR) {
 		fNode := ast.NewNode(ast.FOR)
 		fNode.Condition = node
 		fNode.Then = p.stmt()
 		return fNode
 	}
 
-	if p.consume(token.RETURN) {
+	if p.expect(token.RETURN) {
 		node = ast.NewNodeBinop(ast.RETURN, node, nil)
 	}
 
@@ -166,15 +155,15 @@ func (p *Parser) expr() *ast.Node {
 func (p *Parser) assign() *ast.Node {
 	node := p.equality()
 
-	if p.consume(token.ASSIGN) {
+	if p.expect(token.ASSIGN) {
 		node = ast.NewNodeBinop(ast.ASSIGN, node, p.assign())
-	} else if p.consume(token.PA) {
+	} else if p.expect(token.PA) {
 		node = ast.NewNodeBinop(ast.PA, node, p.add())
-	} else if p.consume(token.MA) {
+	} else if p.expect(token.MA) {
 		node = ast.NewNodeBinop(ast.MA, node, p.add())
-	} else if p.consume(token.AA) {
+	} else if p.expect(token.AA) {
 		node = ast.NewNodeBinop(ast.AA, node, p.add())
-	} else if p.consume(token.SA) {
+	} else if p.expect(token.SA) {
 		node = ast.NewNodeBinop(ast.SA, node, p.add())
 	}
 
@@ -185,9 +174,9 @@ func (p *Parser) equality() *ast.Node {
 	node := p.relational()
 
 	for {
-		if p.consume(token.EQ) {
+		if p.expect(token.EQ) {
 			node = ast.NewNodeBinop(ast.EQ, node, p.relational())
-		} else if p.consume(token.NOT_EQ) {
+		} else if p.expect(token.NOT_EQ) {
 			node = ast.NewNodeBinop(ast.NOT_EQ, node, p.relational())
 		} else {
 			return node
@@ -199,13 +188,13 @@ func (p *Parser) relational() *ast.Node {
 	node := p.add()
 
 	for {
-		if p.consume(token.GT) {
+		if p.expect(token.GT) {
 			node = ast.NewNodeBinop(ast.GT, node, p.add())
-		} else if p.consume(token.GE) {
+		} else if p.expect(token.GE) {
 			node = ast.NewNodeBinop(ast.GE, node, p.add())
-		} else if p.consume(token.LT) {
+		} else if p.expect(token.LT) {
 			node = ast.NewNodeBinop(ast.GT, p.add(), node)
-		} else if p.consume(token.LE) {
+		} else if p.expect(token.LE) {
 			node = ast.NewNodeBinop(ast.GE, p.add(), node)
 		} else {
 			return node
@@ -217,9 +206,9 @@ func (p *Parser) add() *ast.Node {
 	node := p.mul()
 
 	for {
-		if p.consume(token.PLUS) {
+		if p.expect(token.PLUS) {
 			node = ast.NewNodeBinop(ast.ADD, node, p.mul())
-		} else if p.consume(token.MINUS) {
+		} else if p.expect(token.MINUS) {
 			node = ast.NewNodeBinop(ast.SUB, node, p.mul())
 		} else {
 			return node
@@ -231,13 +220,13 @@ func (p *Parser) mul() *ast.Node {
 	node := p.unary()
 
 	for {
-		if p.consume(token.ASTERISK) {
+		if p.expect(token.ASTERISK) {
 			node = ast.NewNodeBinop(ast.MUL, node, p.unary())
-		} else if p.consume(token.SLASH) {
+		} else if p.expect(token.SLASH) {
 			node = ast.NewNodeBinop(ast.DIV, node, p.unary())
-		} else if p.consume(token.CALET) {
+		} else if p.expect(token.CALET) {
 			node = ast.NewNodeBinop(ast.EXPONENT, node, p.unary())
-		} else if p.consume(token.PARCENT) {
+		} else if p.expect(token.PARCENT) {
 			node = ast.NewNodeBinop(ast.MODULUS, node, p.unary())
 		} else {
 			return node
@@ -246,16 +235,16 @@ func (p *Parser) mul() *ast.Node {
 }
 
 func (p *Parser) unary() *ast.Node {
-	if p.consume(token.PLUS) {
+	if p.expect(token.PLUS) {
 		return ast.NewNodeBinop(ast.ADD, ast.NewIntegerNode(0), p.primary())
-	} else if p.consume(token.MINUS) {
+	} else if p.expect(token.MINUS) {
 		return ast.NewNodeBinop(ast.SUB, ast.NewIntegerNode(0), p.primary())
 	}
 	return p.primary()
 }
 
 func (p *Parser) parseParen() *ast.Node {
-	if p.consume(token.RPAREN) {
+	if p.expect(token.RPAREN) {
 		if p.curTokenIs(token.IDENT) {
 			node := ast.NewNode(ast.CALL)
 			node.Ident = p.curToken.Literal
@@ -269,7 +258,7 @@ func (p *Parser) parseParen() *ast.Node {
 	expressions := []*ast.Node{}
 	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
 		expressions  = append(expressions, p.expr())
-		p.consume(token.COMMA)
+		p.expect(token.COMMA)
 	}
 
 	if p.curTokenIs(token.EOF) {
@@ -296,7 +285,7 @@ func (p *Parser) parseParen() *ast.Node {
 }
 
 func (p *Parser) primary() *ast.Node {
-	if p.consume(token.LPAREN) {
+	if p.expect(token.LPAREN) {
 		return p.parseParen()
 	}
 
@@ -304,13 +293,13 @@ func (p *Parser) primary() *ast.Node {
 		identifier := p.curToken.Literal
 		p.nextToken()
 
-		if p.consume(token.LPAREN) {
+		if p.expect(token.LPAREN) {
 			node := ast.NewNode(ast.CALL)
 			node.Ident = identifier
 
 			for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
 				node.Params = append(node.Params, p.expr()) 
-				p.consume(token.COMMA)
+				p.expect(token.COMMA)
 			}
 
 			if p.expect(token.RPAREN) {
