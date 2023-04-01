@@ -1,48 +1,112 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"jpl/ast"
 	"jpl/token"
 )
 
+func testInfixExpr(
+	t *testing.T,
+	node ast.Expr,
+	left interface{},
+	operator ast.OperatorKind,
+	right interface{},
+) bool {
+	ie, ok := node.(*ast.InfixExpr)
+	if !ok {
+		t.Errorf("This is not *ast.InfixExpr. got=%T", node)
+	}
+
+	if !testLiteral(t, ie.Left, left) {
+		return false
+	}
+
+	if ie.Operator != operator {
+		t.Errorf("node.Operator is not %d. got=%d", operator, ie.Operator)
+	}
+
+	if !testLiteral(t, ie.Right, right) {
+		return false
+	}
+
+	return true
+}
+
+func testLiteral(t *testing.T, expr ast.Expr, expected interface{}) bool {
+	switch v := expected.(type) {
+	case int64:
+		return testInteger(t, expr, int64(v))
+	case string:
+		return testIdentifier(t, expr, string(v))
+	}
+	t.Errorf("type of expr not handled. got=%T", expr)
+	return false
+}
+
+func testInteger(t *testing.T, intExpr ast.Expr, value int64) bool {
+	integ, ok := intExpr.(*ast.Integer)
+	if !ok {
+		t.Errorf("This is not *ast.Integer. got=%T", intExpr)
+		return false
+	}
+
+	if integ.Value != value {
+		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+		return false
+	}
+
+	return true
+}
+
+func testIdentifier(t *testing.T, identExpr ast.Expr, value string) bool {
+	ident, ok := identExpr.(*ast.Ident)
+	if !ok {
+		t.Errorf("This is not *ast.Ident. got=%T", identExpr)
+		return false
+	}
+
+	if ident.Name != value {
+		t.Errorf("ident.Name not %s. got=%s", value, ident.Name)
+		return false
+	}
+
+	return true
+}
+
 func TestOperator(t *testing.T) {
 	tests := []struct {
 		input    string
-		nodeKind ast.NodeKind
-		lhs      int
-		rhs      int
+		lhs      int64
+		operator ast.OperatorKind
+		rhs      int64
 	}{
-		{ "6５+6", ast.ADD, 65, 6,},
-		{ "５ ＋ 6", ast.ADD, 5, 6,},
-		{ "5５ - 5", ast.SUB, 55, 5,},
-		{"６ー6", ast.SUB, 6, 6,},
-		{"５*5", ast.MUL, 5, 5},
-		{"５＊5", ast.MUL, 5, 5},
-		{"2５×5", ast.MUL, 25, 5},
-		{"５/5", ast.DIV, 5, 5},
-		{"５／5", ast.DIV, 5, 5},
-		{"５÷45", ast.DIV, 5, 45},
-		{"5^10", ast.EXPONENT, 5, 10},
-		{"５＾１０", ast.EXPONENT, 5, 10},
-		{"5%3", ast.MODULUS, 5, 3},
-		{"５％３", ast.MODULUS, 5, 3},
+		{ "6５+6", 65, ast.ADD, 6,},
+		{ "５ ＋ 6", 5, ast.ADD, 6,},
+		{ "5５ - 5", 55, ast.SUB, 5,},
+		{"６ー6", 6, ast.SUB, 6,},
+		{"５*5", 5, ast.MUL, 5},
+		{"５＊5", 5, ast.MUL, 5},
+		{"2５×5", 25, ast.MUL, 5},
+		{"５/5", 5, ast.DIV, 5},
+		{"５／5", 5, ast.DIV, 5},
+		{"５÷45", 5, ast.DIV, 45},
+		{"5^10", 5, ast.EXPONENT, 10},
+		{"５＾１０", 5, ast.EXPONENT, 10},
+		{"5%3", 5, ast.MODULUS, 3},
+		{"５％３", 5, ast.MODULUS, 3},
 	}
 
-	for i, v := range tests {
+	for _, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		for _, node := range program.Nodes {
-			if node.NodeKind != v.nodeKind {
-				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
-			}
-			if node.Lhs == nil || node.Lhs.Num != v.lhs {
-				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
-			}
-			if node.Rhs == nil || node.Rhs.Num != v.rhs {
-				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		for _, n := range program.Nodes {
+			node := n.(*ast.ExprStmt).Expr
+			if !testInfixExpr(t, node, v.lhs, v.operator, v.rhs) {
+				return
 			}
 		}
 	}
@@ -51,27 +115,20 @@ func TestOperator(t *testing.T) {
 func TestUnaryOperator(t *testing.T) {
 	tests := []struct {
 		input string
-		nodeKind ast.NodeKind
-		lhs int
-		rhs int
+		rhs int64
 	} {
-		{"+5", ast.ADD, 0, 5},
-		{"-5", ast.SUB, 0, 5},
+		{"+5", 5},
+		{"-5", 5},
 	}
 
 	for i, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		for _, node := range program.Nodes {
-			if node.NodeKind != v.nodeKind {
-				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
-			}
-			if node.Lhs == nil || node.Lhs.Num != v.lhs {
-				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
-			}
-			if node.Rhs == nil || node.Rhs.Num != v.rhs {
-				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		for _, n := range program.Nodes {
+			node := n.(*ast.ExprStmt).Expr
+			if node.(*ast.PrefixExpr).Right == nil || node.(*ast.PrefixExpr).Right.(*ast.Integer).Value != v.rhs {
+				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.(*ast.PrefixExpr).Right.(*ast.Integer).Value, v.rhs)
 			}
 		}
 	}
@@ -80,37 +137,32 @@ func TestUnaryOperator(t *testing.T) {
 func TestComparisonOperators(t *testing.T) {
 	tests := []struct {
 		input string
-		nodeKind ast.NodeKind
-		lhs int
-		rhs int
+		lhs int64
+		operator ast.OperatorKind
+		rhs int64
 	} {
-		{"5 < 9", ast.GT, 5, 9},
-		{"５＜９", ast.GT, 5, 9},
-		{"5 <= 9", ast.GE, 5, 9},
-		{"５＜＝９", ast.GE, 5, 9},
-		{"9>5", ast.GT, 5, 9},
-		{"９＞５", ast.GT, 5, 9},
-		{"9>=5", ast.GE, 5, 9},
-		{"9＞＝5", ast.GE, 5, 9},
-		{"5==5", ast.EQ, 5, 5},
-		{"５＝＝５", ast.EQ, 5, 5},
-		{"5!=9", ast.NOT_EQ, 5, 9},
-		{"５！＝９", ast.NOT_EQ, 5, 9},
+		{"5 < 9", 5, ast.GT, 9},
+		{"５＜９", 5, ast.GT, 9},
+		{"5 <= 9", 5, ast.GE, 9},
+		{"５＜＝９", 5, ast.GE, 9},
+		{"9>5", 5, ast.GT, 9},
+		{"９＞５", 5, ast.GT, 9},
+		{"9>=5", 5, ast.GE, 9},
+		{"9＞＝5", 5, ast.GE, 9},
+		{"5==5", 5, ast.EQ, 5},
+		{"５＝＝５", 5, ast.EQ, 5},
+		{"5!=9", 5, ast.NOT_EQ, 9},
+		{"５！＝９", 5, ast.NOT_EQ, 9},
 	}
 
-	for i, v := range tests {
+	for _, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		for _, node := range program.Nodes {
-			if node.NodeKind != v.nodeKind {
-				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
-			}
-			if node.Lhs == nil || node.Lhs.Num != v.lhs {
-				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.Num, v.lhs)
-			}
-			if node.Rhs == nil || node.Rhs.Num != v.rhs {
-				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		for _, n := range program.Nodes {
+			node := n.(*ast.ExprStmt).Expr
+			if !testInfixExpr(t, node, v.lhs, v.operator, v.rhs) {
+				return
 			}
 		}
 	}
@@ -119,27 +171,22 @@ func TestComparisonOperators(t *testing.T) {
 func TestIdentifier(t *testing.T) {
 	tests := []struct {
 		input string
-		nodeKind ast.NodeKind
 		lhs string
-		rhs int
+		operator ast.OperatorKind
+		rhs int64
 	} {
-		{"こ=5", ast.ASSIGN, "こ", 5},
-		{"a＝10", ast.ASSIGN, "a", 10},
+		{"こ=5", "こ", ast.ASSIGN, 5},
+		{"a＝10", "a", ast.ASSIGN, 10},
 	}
 
-	for i, v := range tests {
+	for _, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		for _, node := range program.Nodes {
-			if node.NodeKind != v.nodeKind {
-				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
-			}
-			if node.Lhs == nil || node.Lhs.Ident != v.lhs{
-				t.Fatalf("test%d(lhs) : got=%s expect=%s\n", i, node.Lhs.Ident, v.lhs)
-			}
-			if node.Rhs == nil || node.Rhs.Num != v.rhs {
-				t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		for _, n := range program.Nodes {
+			node := n.(*ast.ExprStmt).Expr
+			if !testInfixExpr(t, node, v.lhs, v.operator, v.rhs) {
+				return
 			}
 		}
 	}
@@ -148,183 +195,257 @@ func TestIdentifier(t *testing.T) {
 func TestReturnStatement(t *testing.T) {
 	tests := []struct {
 		input string
-		nodeKind ast.NodeKind
-		lhs ast.NodeKind
+		lhs int64
+		operator ast.OperatorKind
+		rhs int64
 	} {
-		{"5+5 戻す", ast.RETURN, ast.ADD},
+		{"5+5 戻す", 5, ast.ADD, 5},
 	}
 
-	for i, v := range tests {
+	for _, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		for _, node := range program.Nodes {
-			if node.NodeKind != v.nodeKind {
-				t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ReturnStmt)
+			if !ok {
+				t.Fatalf("This is not *ast.ReturnStmt. got=%T", n)
+				return
 			}
-			if node.Lhs == nil || node.Lhs.NodeKind != v.lhs{
-				t.Fatalf("test%d(lhs) : got=%d expect=%d\n", i, node.Lhs.NodeKind, v.lhs)
+
+			if !testInfixExpr(t, node.Value, v.lhs, v.operator, v.rhs) {
+				return
 			}
 		}
 	}
 }
 
 func TestIfStatement(t *testing.T) {
-	input := "もし 5 == 5 ならば 10 戻す"
+	input := "もし 5 == 5 ならば {10+10}"
 	head:= token.Tokenize(input)
-	program, _ := Parse(head)
+	program, errors := Parse(head)
+	if len(errors) > 0 {
+		for _, err := range errors {
+			fmt.Println(err.Message())
+		}
+		t.Fatalf("error")
+	}
 
-	node := program.Nodes[0]
-	if node.NodeKind != ast.IF{
-		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.IF)
+	node, ok := program.Nodes[0].(*ast.IfStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.IfStmt. got=%T", program.Nodes[0])
 	}
-	if node.Condition.NodeKind != ast.EQ {
-		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.EQ)
+
+	if !testInfixExpr(t, node.Condition, int64(5), ast.EQ, int64(5)) {
+		return
 	}
-	if node.Then.NodeKind != ast.RETURN {
-		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.RETURN)
+
+	if node.Body == nil {
+		t.Errorf("node.Body is nil.")
+	}
+
+	if len(node.Body.List) != 1 {
+		t.Errorf("Body is not 1 statement. got=%d\n", len(node.Body.List))
+	}
+
+	con, ok := node.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
+	}
+
+	if !testInfixExpr(t, con.Expr, int64(10), ast.ADD, int64(10)) {
+		return
+	}
+
+	if node.Else != nil {
+		t.Errorf("node.Else is not nil. got=%+v", node.Else)
 	}
 }
 
 func TestIfElseStatement(t *testing.T) {
-	input := "もし 5 != 5 ならば 10 戻す それ以外 15 戻す"
+	input := "もし 5 == 5 ならば {10+10} それ以外 {15-5}"
 	head := token.Tokenize(input)
 	program, _ := Parse(head)
 
-	node := program.Nodes[0]
-	if node.NodeKind != ast.IF{
-		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.IF)
+	node, ok := program.Nodes[0].(*ast.IfStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.IfStmt. got=%T", program.Nodes[0])
 	}
-	if node.Condition.NodeKind != ast.NOT_EQ {
-		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.EQ)
+
+	if !testInfixExpr(t, node.Condition, int64(5), ast.EQ, int64(5)) {
+		return
 	}
-	if node.Then.NodeKind != ast.RETURN {
-		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.RETURN)
+
+	if node.Body == nil {
+		t.Errorf("node.Body is nil.")
 	}
-	if node.Else == nil && node.Else.NodeKind != ast.RETURN {
-		t.Fatalf("got=%d expect=%d\n", node.Else.NodeKind, ast.RETURN)
+
+	if len(node.Body.List) != 1 {
+		t.Errorf("Body is not 1 statement. got=%d\n", len(node.Body.List))
+	}
+
+	con, ok := node.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
+	}
+
+	if !testInfixExpr(t, con.Expr, int64(10), ast.ADD, int64(10)) {
+		return
+	}
+
+	if node.Else == nil {
+		t.Errorf("node.Else is not nil. got=%+v", node.Else)
+	}
+
+	if len(node.Else.List) != 1 {
+		t.Errorf("Else is not 1 statement. got=%d\n", len(node.Else.List))
+	}
+
+	alter, ok := node.Else.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Else.List[0])
+	}
+
+	if !testInfixExpr(t, alter.Expr, int64(15), ast.SUB, int64(5)) {
+		return
 	}
 }
 
 func TestForStatement(t *testing.T) {
 	input := `
 	a = 1
-	a < 5 ならば 繰り返す a = a + 1
+	a < 5 ならば 繰り返す {a = 1}
 	`
 	head := token.Tokenize(input)
 	program, _ := Parse(head)
 
-	node := program.Nodes[1]
-	if node.NodeKind != ast.FOR {
-		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.FOR)
+	node, ok := program.Nodes[1].(*ast.ForStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ForStmt. got=%T", program.Nodes[1])
 	}
-	if node.Condition.NodeKind != ast.GT {
-		t.Fatalf("got=%d expect=%d\n", node.Condition.NodeKind, ast.GT)
-	}
-	if node.Then.NodeKind != ast.ASSIGN {
-		t.Fatalf("got=%d expect=%d\n", node.Then.NodeKind, ast.ASSIGN)
-	}
-}
 
-func TestBlockStatement(t *testing.T) {
-	input := `
-	{
-		a = 1
-		a = a + 1
-		もし a == 4 ならば
-			a = a + 10
-		それ以外
-			a = a +1
-	}`
-	head := token.Tokenize(input)
-	program, _ := Parse(head)
-
-	node := program.Nodes[0]
-	if node.NodeKind != ast.BLOCK {
-		t.Fatalf("got=%d expect=%d\n", node.NodeKind, ast.BLOCK)
+	if !testInfixExpr(t, node.Condition, "a", ast.GT, int64(5)) {
+		return
 	}
-	if len(node.Stmts) != 3 {
-		t.Fatalf("got=%d expect=%d\n", len(node.Stmts), 3)
+
+	if node.Body == nil {
+		t.Fatalf("node.Body is nil.")
+	}
+
+	if len(node.Body.List) != 1 {
+		t.Errorf("node.Body.List is not 1 statement. got=%d", len(node.Body.List))
+	}
+
+	body, ok := node.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
+	}
+
+	if !testInfixExpr(t, body.Expr, "a", ast.ASSIGN, int64(1)) {
+		return
 	}
 }
 
 func TestFuncDeclation(t *testing.T) {
 	input := `
 	関数 足し算(a, b) {
-		a 戻す
+		a + b
 	}`
 	head := token.Tokenize(input)
 	program, _ := Parse(head)
 
-	node := program.Nodes[0]
-	if node.NodeKind != ast.FUNC{
-		t.Fatalf("kind : got=%d expect=%d\n", node.NodeKind, ast.FUNC)
+	node, ok := program.Nodes[0].(*ast.FuncStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.FuncStmt. got=%T", program.Nodes[0])
 	}
-	if node.Ident != "足し算" {
-		t.Fatalf("ident : got=%s expect=%s\n", node.Ident, "足し算")
+
+	if node.Name != "足し算" {
+		t.Fatalf("This name is not 足し算. got=%s", node.Name)
 	}
+
 	if len(node.Params) != 2 {
-		t.Fatalf("params length : got=%d expect=%d\n", len(node.Params), 2)
+		t.Fatalf("node.Params is not 2 identifiers. got=%d", len(node.Params))
 	}
-	if node.Params[0].Ident != "a" {
-		t.Fatalf("first arg : got=%s expect=%s\n", node.Params[0].Ident, "a")
+
+	if node.Params[0].Name != "a" {
+		t.Fatalf("first arg : got=%s expect=%s\n", node.Params[0].Name, "a")
 	}
-	if node.Params[1].Ident != "b" {
-		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "b")
+
+	if node.Params[1].Name != "b" {
+		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Name, "b")
 	}
-	if node.Body.NodeKind != ast.BLOCK {
-		t.Fatalf("body kind : got=%d expect=%d\n", node.Body.NodeKind, ast.BLOCK)
+
+	if node.Body == nil {
+		t.Fatalf("node.Body is nil.")
+	}
+
+	if len(node.Body.List) != 1 {
+		t.Errorf("node.Body.List is not 1 statement. got=%d", len(node.Body.List))
+	}
+
+	body, ok := node.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
+	}
+
+	if !testInfixExpr(t, body.Expr, "a", ast.ADD, "b") {
+		return
 	}
 }
 
 func TestFuncCall(t *testing.T) {
 	input := `
-	こんにちは(世界, 日本)
+	こんにちは(世界)
 	`
 	head := token.Tokenize(input)
 	program, _ := Parse(head)
 
-	node := program.Nodes[0]
-	if node.NodeKind != ast.CALL{
-		t.Fatalf("kind : got=%d expect=%d\n", node.NodeKind, ast.CALL)
-	}	
-	if node.Ident != "こんにちは" {
-		t.Fatalf("ident : got=%s expect=%s\n", node.Ident, "こんにちは")
+	node, ok := program.Nodes[0].(*ast.ExprStmt).Expr.(*ast.CallExpr)
+	if !ok {
+		t.Fatalf("This is not *ast.CallExpr. got=%T", program.Nodes[0])
 	}
-	if node.Params[0].Ident != "世界" {
-		t.Fatalf("first arg : got=%s expect=%s\n", node.Params[0].Ident, "世界")
+
+	if node.Name != "こんにちは" {
+		t.Fatalf("node.Name is not こんにちは. got=%s", node.Name)
 	}
-	if node.Params[1].Ident != "日本" {
-		t.Fatalf("second arg : got=%s expect=%s\n", node.Params[1].Ident, "日本")
+
+	if len(node.Params) != 1 {
+		t.Fatalf("node.Params is not 1 expression. got=%d", len(node.Params))
+	}
+
+	param, ok := node.Params[0].(*ast.Ident)
+	if !ok {
+		t.Fatalf("This is not *ast.Ident. got=%T", node.Params[0])
+	}
+
+	if param.Name != "世界" {
+		t.Fatalf("param.Name is not 世界. got=%s", param.Name)
 	}
 }
 
 func TestExtendAssign(t *testing.T) {
 	tests := []struct {
 		input string
-		nodeKind ast.NodeKind
-		rhs int
+		lhs string
+		operator ast.OperatorKind
+		rhs int64
 	} {
-	{"a = 10", ast.ASSIGN, 10},
-	{"a += 1", ast.PA, 1},
-	{"a -= 2", ast.MA, 2},
-	{"a *= 3", ast.AA, 3},
-	{"a /= 4", ast.SA, 4},
+	{"a = 10", "a", ast.ASSIGN, 10},
+	{"a += 1", "a", ast.PA, 1},
+	{"a -= 2", "a", ast.MA, 2},
+	{"a *= 3", "a", ast.AA, 3},
+	{"a /= 4", "a", ast.SA, 4},
 	}
 	
-	for i, v := range tests {
+	for _, v := range tests {
 		head := token.Tokenize(v.input)
 		program, _ := Parse(head)
 
-		node := program.Nodes[0]
-		if node.NodeKind != v.nodeKind {
-			t.Fatalf("test%d(kind) : got=%d expect=%d\n", i, node.NodeKind, v.nodeKind)
-		}
-		if node.Lhs == nil || node.Lhs.Ident != "a"{
-			t.Fatalf("test%d(lhs) : got=%s expect=%s\n", i, node.Lhs.Ident, "a")
-		}
-		if node.Rhs == nil || node.Rhs.Num != v.rhs {
-			t.Fatalf("test%d(rhs) : got=%d expect=%d\n", i, node.Rhs.Num, v.rhs)
+		for _, n := range program.Nodes {
+			node := n.(*ast.ExprStmt).Expr
+			if !testInfixExpr(t, node, v.lhs, v.operator, v.rhs) {
+				return
+			}
 		}
 	}
 }

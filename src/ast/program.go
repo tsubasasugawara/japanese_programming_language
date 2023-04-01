@@ -1,7 +1,7 @@
 package ast
 
 type Program struct {
-	Nodes []*Node
+	Nodes []Node
 }
 
 func NewProgram() *Program {
