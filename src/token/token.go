@@ -46,7 +46,7 @@ const (
 	ILLEGAL
 )
 
-var keywords = map[string]TokenKind{
+var Keywords = map[string]TokenKind{
 	"戻す" : RETURN,
 	"もし" : IF,
 	"それ以外" : ELSE,
@@ -61,19 +61,19 @@ type Token struct {
 	Literal string
 }
 
-func newToken(kind TokenKind, cur *Token, literal string) *Token {
+func NewToken(kind TokenKind, cur *Token, literal string) *Token {
 	token := &Token{Kind: kind, Literal: literal}
 	cur.Next = token
 	return token
 }
 
-func newIntegerToken(cur *Token, literal string) *Token {
-	token := newToken(INTEGER, cur, literal)
+func NewIntegerToken(cur *Token, literal string) *Token {
+	token := NewToken(INTEGER, cur, literal)
 	return token
 }
 
-func lookUpIdent(key string) TokenKind {
-	if tok, ok := keywords[key]; ok {
+func LookUpIdent(key string) TokenKind {
+	if tok, ok := Keywords[key]; ok {
 		return tok
 	}
 	return IDENT

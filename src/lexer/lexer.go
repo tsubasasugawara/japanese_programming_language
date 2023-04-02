@@ -1,8 +1,10 @@
-package token
+package lexer
 
 import (
 	"regexp"
 	"unicode"
+
+	"jpl/token"
 )
 
 type Lexer struct {
@@ -96,10 +98,10 @@ func (l *Lexer) readString() string {
 	return string(l.input[position:l.position])
 }
 
-func Tokenize(input string) *Token {
+func Tokenize(input string) *token.Token {
 	l := newLexer(input)
 
-	head := &Token{}
+	head := &token.Token{}
 	cur := head
 
 	for l.ch != 0 {
@@ -108,24 +110,24 @@ func Tokenize(input string) *Token {
 		switch l.ch {
 		case '+', '＋':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(PA, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.PA, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(PLUS, cur, string(l.ch))
+				cur = token.NewToken(token.PLUS, cur, string(l.ch))
 			}
 		case '-', 'ー':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(MA, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.MA, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(MINUS, cur, string(l.ch))
+				cur = token.NewToken(token.MINUS, cur, string(l.ch))
 			}
 		case '*', '＊', '×':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(AA, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.AA, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(ASTERISK, cur, string(l.ch))
+				cur = token.NewToken(token.ASTERISK, cur, string(l.ch))
 			}
 		case '/', '／':
 			if ch := l.peekChar(); ch == '/' || ch == '／' {
@@ -144,78 +146,78 @@ func Tokenize(input string) *Token {
 				}
 				l.readChar()
 			} else if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(SA, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.SA, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(SLASH, cur, string(l.ch))
+				cur = token.NewToken(token.SLASH, cur, string(l.ch))
 			}
 		case '÷':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(SA, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.SA, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(SLASH, cur, string(l.ch))
+				cur = token.NewToken(token.SLASH, cur, string(l.ch))
 			}
 		case '^', '＾':
-			cur = newToken(CALET, cur, string(l.ch))
+			cur = token.NewToken(token.CALET, cur, string(l.ch))
 		case '%', '％':
-			cur = newToken(PARCENT, cur, string(l.ch))
+			cur = token.NewToken(token.PARCENT, cur, string(l.ch))
 		case '(', '（', '「':
-			cur = newToken(LPAREN, cur, string(l.ch))
+			cur = token.NewToken(token.LPAREN, cur, string(l.ch))
 		case ')', '）', '」':
-			cur = newToken(RPAREN, cur, string(l.ch))
+			cur = token.NewToken(token.RPAREN, cur, string(l.ch))
 		case '{', '｛':
-			cur = newToken(LBRACE, cur, string(l.ch))
+			cur = token.NewToken(token.LBRACE, cur, string(l.ch))
 		case '}', '｝':
-			cur = newToken(RBRACE, cur, string(l.ch))
+			cur = token.NewToken(token.RBRACE, cur, string(l.ch))
 		case '<', '＜':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(GE, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.GE, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(GT, cur, string(l.ch))
+				cur = token.NewToken(token.GT, cur, string(l.ch))
 			}
 		case '>', '＞':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(LE, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.LE, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(LT, cur, string(l.ch))
+				cur = token.NewToken(token.LT, cur, string(l.ch))
 			}
 		case '=', '＝':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(EQ, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.EQ, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(ASSIGN, cur, string(l.ch))
+				cur = token.NewToken(token.ASSIGN, cur, string(l.ch))
 			}
 		case '!', '！':
 			if ch := l.peekChar(); ch == '=' || ch == '＝' {
-				cur = newToken(NOT_EQ, cur, string([]rune{l.ch, ch}))
+				cur = token.NewToken(token.NOT_EQ, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = newToken(ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
+				cur = token.NewToken(token.ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
 			}
 		case ',', '、', '，':
-			cur = newToken(COMMA, cur, string(l.ch))
+			cur = token.NewToken(token.COMMA, cur, string(l.ch))
 		case 0:
-			cur = newToken(EOF, cur, "")
+			cur = token.NewToken(token.EOF, cur, "")
 		default:
 			if isNum(l.ch) {
-				cur = newIntegerToken(cur, l.readNum())
+				cur = token.NewIntegerToken(cur, l.readNum())
 				continue
 			} else if isJapanese(l.ch) || isAlphabet(l.ch) {
 				str := l.readString()
-				kind := lookUpIdent(str)
-				cur = newToken(kind, cur, str)
+				kind := token.LookUpIdent(str)
+				cur = token.NewToken(kind, cur, str)
 				continue
 			} else {
-				cur = newToken(ILLEGAL, cur, string(l.ch))
+				cur = token.NewToken(token.ILLEGAL, cur, string(l.ch))
 			}
 		}
 		l.readChar()
 	}
 
-	cur = newToken(EOF, cur, "")
+	cur = token.NewToken(token.EOF, cur, "")
 	return head.Next
 }

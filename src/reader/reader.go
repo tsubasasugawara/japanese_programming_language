@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"jpl/token"
+	"jpl/lexer"
 	"jpl/parser"
 	"jpl/evaluator"
 	"jpl/object"
@@ -24,7 +24,7 @@ func Read(path string) {
 		panic(err)
 	}
 
-	head := token.Tokenize(string(content))
+	head := lexer.Tokenize(string(content))
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		printParserErrors(errors)

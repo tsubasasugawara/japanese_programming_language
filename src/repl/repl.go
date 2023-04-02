@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"jpl/token"
+	"jpl/lexer"
 	"jpl/parser"
 	"jpl/evaluator"
 	"jpl/object"
@@ -37,7 +37,7 @@ func Start(in io.Reader, out io.Writer) {
 
 		input = input + scanner.Text() + "\n"
 
-		head := token.Tokenize(input)
+		head := lexer.Tokenize(input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			errMessages := ""

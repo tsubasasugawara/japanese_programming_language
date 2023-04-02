@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"jpl/token"
+	"jpl/lexer"
 	"jpl/parser"
 	"jpl/object"
 )
@@ -29,7 +29,7 @@ func TestCalc(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			t.Fatalf("Error.\n")
@@ -66,7 +66,7 @@ func TestComparisonOperators(t *testing.T) {
 		{"9 != 9", false},
 	}
 	for i, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			t.Fatalf("Error.\n")
@@ -95,7 +95,7 @@ func TestIdentifier(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			t.Fatalf("Error.\n")
@@ -119,7 +119,7 @@ func TestReturnStatement(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, errors := parser.Parse(head)
 		if len(errors) > 0 {
 			t.Fatalf("Error.\n")
@@ -143,7 +143,7 @@ func TestIfStatements(t *testing.T) {
 		}
 		a 戻す
 		`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error\n")
@@ -166,7 +166,7 @@ func TestForStatement(t *testing.T) {
 	}
 	a 戻す
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error,\n")
@@ -191,7 +191,7 @@ func TestBlockStatement(t *testing.T) {
 	}
 	a 戻す
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error\n")
@@ -224,7 +224,7 @@ func TestFuncCall(t *testing.T) {
 	b = abc(10, 足す(2,3), c)
 	b 戻す
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -251,7 +251,7 @@ func TestRowComment(t *testing.T) {
 	／／ こんにちは ＝ こんにちは ＋ 100
 	こんにちは
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error\n")
@@ -275,7 +275,7 @@ func TestBlockComment(t *testing.T) {
 	＊／
 	こんにちは
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error\n")
@@ -299,7 +299,7 @@ func TestExtendAssign(t *testing.T) {
 	a /= 27
 	a
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
 		t.Fatalf("Error\n")

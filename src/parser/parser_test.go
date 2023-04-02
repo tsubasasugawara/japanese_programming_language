@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"jpl/ast"
-	"jpl/token"
+	"jpl/lexer"
 )
 
 func testInfixExpr(
@@ -100,7 +100,7 @@ func TestOperator(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
@@ -122,7 +122,7 @@ func TestUnaryOperator(t *testing.T) {
 	}
 
 	for i, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
@@ -156,7 +156,7 @@ func TestComparisonOperators(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
@@ -180,7 +180,7 @@ func TestIdentifier(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
@@ -203,7 +203,7 @@ func TestReturnStatement(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
@@ -222,7 +222,7 @@ func TestReturnStatement(t *testing.T) {
 
 func TestIfStatement(t *testing.T) {
 	input := "もし 5 == 5 ならば {10+10}"
-	head:= token.Tokenize(input)
+	head:= lexer.Tokenize(input)
 	program, errors := Parse(head)
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -264,7 +264,7 @@ func TestIfStatement(t *testing.T) {
 
 func TestIfElseStatement(t *testing.T) {
 	input := "もし 5 == 5 ならば {10+10} それ以外 {15-5}"
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, _ := Parse(head)
 
 	node, ok := program.Nodes[0].(*ast.IfStmt)
@@ -316,7 +316,7 @@ func TestForStatement(t *testing.T) {
 	a = 1
 	a < 5 ならば 繰り返す {a = 1}
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, _ := Parse(head)
 
 	node, ok := program.Nodes[1].(*ast.ForStmt)
@@ -351,7 +351,7 @@ func TestFuncDeclation(t *testing.T) {
 	関数 足し算(a, b) {
 		a + b
 	}`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, _ := Parse(head)
 
 	node, ok := program.Nodes[0].(*ast.FuncStmt)
@@ -397,7 +397,7 @@ func TestFuncCall(t *testing.T) {
 	input := `
 	こんにちは(世界)
 	`
-	head := token.Tokenize(input)
+	head := lexer.Tokenize(input)
 	program, _ := Parse(head)
 
 	node, ok := program.Nodes[0].(*ast.ExprStmt).Expr.(*ast.CallExpr)
@@ -438,7 +438,7 @@ func TestExtendAssign(t *testing.T) {
 	}
 	
 	for _, v := range tests {
-		head := token.Tokenize(v.input)
+		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
 
 		for _, n := range program.Nodes {
