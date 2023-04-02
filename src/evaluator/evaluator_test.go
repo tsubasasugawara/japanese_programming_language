@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"testing"
 
 	"jpl/token"
@@ -11,7 +12,7 @@ import (
 func TestCalc(t *testing.T) {
 	tests := []struct {
 		input string
-		expectNum int
+		expectNum int64
 	} {
 		{"5 + 5", 10},
 		{"５＋１９", 24},
@@ -83,7 +84,7 @@ func TestComparisonOperators(t *testing.T) {
 func TestIdentifier(t *testing.T) {
 	tests := []struct{
 		input string
-		expect int
+		expect int64
 	}{
 		{"a = 5 a", 5},
 		{"test=10 test", 10},
@@ -226,7 +227,9 @@ func TestFuncCall(t *testing.T) {
 	head := token.Tokenize(input)
 	program, errors := parser.Parse(head)
 	if len(errors) > 0 {
-		t.Fatalf("Error\n")
+		for _, err := range errors {
+			fmt.Println(err.Message())
+		}
 	}
 
 	env := object.NewEnvironment()

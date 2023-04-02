@@ -36,7 +36,67 @@ func isTruthly(obj object.Object) bool {
 	}
 }
 
-func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right object.Object) object.Object {
+func evalInfixExpr(node ast.Node, env *object.Environment) object.Object {
+	expr := node.(*ast.InfixExpr)
+
+	switch expr.Operator {
+	case ast.PA, ast.MA, ast.SA, ast.AA:
+		return evalExtendAssign(expr, env, expr.Operator)
+	case ast.ASSIGN:
+		val := Eval(expr.Right, env)
+		left, ok := expr.Left.(*ast.Ident)
+		if !ok {
+			return newError("変数が必要です。")
+		}
+		env.Set(left.Name, val)
+		return NULL
+	}
+
+	left := Eval(expr.Left, env)
+	right := Eval(expr.Right, env)
+	switch right.(type) {
+	case *object.Integer:
+		return evalIntegerExpression(expr.Operator, left, right)
+	}
+
+	return newError("対応していない型が検出されました")
+}
+
+func evalExtendAssign(node ast.Node, env *object.Environment, opeType ast.OperatorKind) object.Object {
+	stmt := node.(*ast.InfixExpr)
+
+	if stmt.Left == nil {
+		return newError("変数が宣言されていません")
+	}
+
+	left, ok := stmt.Left.(*ast.Ident)
+	if !ok {
+		return newError("代入演算子の左辺には、変数が必要です。")
+	}
+
+	lhs , ok := env.Get(left.Name)
+	if !ok {
+		return newError("変数が宣言されていません")
+	}
+
+	rhs := Eval(stmt.Right, env)
+
+	var val object.Object
+	switch rhs.Type() {
+	case object.INTEGER:
+		val = evalIntegerExpression(opeType, lhs, rhs)
+		if isError(val) {
+			return val
+		}
+	default:
+		return newError("対応していない型が検出されました。")
+	}
+
+	env.Set(left.Name, val)
+	return NULL
+}
+
+func evalIntegerExpression(opeKind ast.OperatorKind, left object.Object, right object.Object) object.Object {
 	if left.Type() != object.INTEGER || right.Type() != object.INTEGER {
 		return newError("数値が必要です。")
 	}
@@ -44,17 +104,17 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 	lval := left.(*object.Integer).Value
 	rval := right.(*object.Integer).Value
 
-	switch nodeKind {
-	case ast.ADD:
+	switch opeKind {
+	case ast.ADD, ast.PA:
 		return &object.Integer{Value: lval + rval}
-	case ast.SUB:
+	case ast.SUB, ast.MA:
 		return &object.Integer{Value: lval - rval}
-	case ast.MUL:
+	case ast.MUL, ast.AA:
 		return &object.Integer{Value: lval * rval}
-	case ast.DIV:
+	case ast.DIV, ast.SA:
 		return &object.Integer{Value: lval / rval}
 	case ast.EXPONENT:
-		return &object.Integer{Value: int(math.Pow(float64(lval), float64(rval)))}
+		return &object.Integer{Value: int64(math.Pow(float64(lval), float64(rval)))}
 	case ast.MODULUS:
 		return &object.Integer{Value: lval % rval}
 	case ast.EQ:
@@ -70,40 +130,54 @@ func evalIntegerExpression(nodeKind ast.NodeKind, left object.Object, right obje
 	}
 }
 
-func evalIfStatement(node *ast.Node, env *object.Environment) object.Object {
-	condition := Eval(node.Condition, env)
+func evalPrefixExpr(node ast.Node, env *object.Environment) object.Object {
+	expr := node.(*ast.PrefixExpr)
+
+	switch expr.Right.(type) {
+	case *ast.Integer:
+		return evalIntegerExpression(expr.Operator, &object.Integer{Value: 0}, Eval(expr.Right, env))
+	}
+
+	return newError("対応していない型が検出されました。")
+}
+
+func evalIfStatement(node ast.Node, env *object.Environment) object.Object {
+	stmt := node.(*ast.IfStmt)
+	condition := Eval(stmt.Condition, env)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthly(condition) {
-		Eval(node.Then, env)
-	} else if node.Else != nil {
-		Eval(node.Else, env)
+		Eval(stmt.Body, env)
+	} else if stmt.Else != nil {
+		Eval(stmt.Else, env)
 	}
 	return NULL
 }
 
-func evalForStatement(node *ast.Node, env *object.Environment) object.Object {
+func evalForStatement(node ast.Node, env *object.Environment) object.Object {
+	stmt := node.(*ast.ForStmt)
 	for {
-		condition := Eval(node.Condition, env)
+		condition := Eval(stmt.Condition, env)
 		if isError(condition) {
 			return condition
 		}
 
 		if isTruthly(condition) {
-			Eval(node.Then, env)
+			Eval(stmt.Body, env)
 		} else {
 			return NULL
 		}
 	}
 }
 
-func evalBlock(node *ast.Node, env *object.Environment) object.Object {
+func evalBlock(node ast.Node, env *object.Environment) object.Object {
 	var res object.Object
 	blockEnv := object.NewEnclosedEnvironment(env)
 
-	for _, stmt:= range node.Stmts {
+	block := node.(*ast.BlockStmt)
+	for _, stmt:= range block.List {
 		res = Eval(stmt, blockEnv)
 
 		if res == nil {
@@ -122,22 +196,25 @@ func evalBlock(node *ast.Node, env *object.Environment) object.Object {
 	return res
 }
 
-func genFuncObj(node *ast.Node, env *object.Environment) object.Object {
+func genFuncObj(node ast.Node, env *object.Environment) object.Object {
 	funcObj := &object.Function{}
 
-	for _, v := range node.Params {
+	stmt := node.(*ast.FuncStmt)
+	for _, v := range stmt.Params {
 		funcObj.Params = append(funcObj.Params, v)
 	}
 
-	funcObj.Body = node.Body
+	funcObj.Body = stmt.Body
 	return funcObj
 }
 
-func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
-	builtin, ok := builtins[node.Ident]
+func evalCallFunc(node ast.Node, env *object.Environment) object.Object {
+	callExpr := node.(*ast.CallExpr)
+
+	builtin, ok := builtins[callExpr.Name]
 	if ok {
 		params := []object.Object{}
-		for _, v := range node.Params {
+		for _, v := range callExpr.Params {
 			p := Eval(v, env)
 			if isError(p) {
 				return p
@@ -147,21 +224,21 @@ func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
 		return builtin.Fn(params...)
 	}
 
-	obj, ok := env.Get(node.Ident)
+	obj, ok := env.Get(callExpr.Name)
 	if !ok || obj.Type() != object.FUNCTION {
 		return newError("関数が宣言されていません。")
 	}
-	if len(obj.(*object.Function).Params) != len(node.Params) {
+	if len(obj.(*object.Function).Params) != len(callExpr.Params) {
 		return newError("引数の個数が正しくありません。")
 	}
 
 	callEnv := object.NewEnclosedEnvironment(env)
 	for i, v := range obj.(*object.Function).Params {
-		p := Eval(node.Params[i], env)
+		p := Eval(callExpr.Params[i], env)
 		if isError(p) {
 			return p
 		}
-		callEnv.SetCurrentEnv(v.Ident, p)
+		callEnv.SetCurrentEnv(v.Name, p)
 	}
 
 	res := Eval(obj.(*object.Function).Body, callEnv)
@@ -171,68 +248,40 @@ func evalCallFunc(node *ast.Node, env *object.Environment) object.Object {
 	return NULL
 }
 
-func evalExtendAssign(node *ast.Node, env *object.Environment, opeType ast.NodeKind) object.Object {
-	if node.Lhs == nil {
-		return newError("変数が宣言されていません")
-	}
-
-	lhs , ok := env.Get(node.Lhs.Ident)
-	if !ok {
-		return newError("変数が宣言されていません")
-	}
-	rhs := Eval(node.Rhs, env)
-
-	val := evalIntegerExpression(opeType, lhs, rhs)
-	if isError(val) {
-		return val
-	}
-	env.Set(node.Lhs.Ident, val)
-	return NULL
-}
-
-func Eval(node *ast.Node, env *object.Environment) object.Object {
-	switch node.NodeKind {
-	case ast.ASSIGN:
-		val := Eval(node.Rhs, env)
-		env.Set(node.Lhs.Ident, val)
-		return NULL
-	case ast.IDENT:
-		object, ok := env.Get(node.Ident)
+func Eval(node ast.Node, env *object.Environment) object.Object {
+	switch node.(type) {
+	case *ast.InfixExpr:
+		return evalInfixExpr(node, env)
+	case *ast.PrefixExpr:
+		return evalPrefixExpr(node, env)
+	case *ast.Ident:
+		object, ok := env.Get(node.(*ast.Ident).Name)
 		if !ok {
 			return newError("変数が宣言されていません")
 		}
 		return object
-	case ast.INTEGER:
-		return &object.Integer{Value: node.Num}
-	case ast.RETURN:
-		val := Eval(node.Lhs, env)
+	case *ast.Integer:
+		return &object.Integer{Value: node.(*ast.Integer).Value}
+	case *ast.CallExpr:
+		return evalCallFunc(node, env)
+	case *ast.ExprStmt:
+		return Eval(node.(*ast.ExprStmt).Expr, env)
+	case *ast.ReturnStmt:
+		val := Eval(node.(*ast.ReturnStmt).Value, env)
 		if isError(val) {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
-	case ast.IF:
+	case *ast.IfStmt:
 		return evalIfStatement(node, env)
-	case ast.FOR:
+	case *ast.ForStmt:
 		return evalForStatement(node, env)
-	case ast.BLOCK:
+	case *ast.BlockStmt:
 		return evalBlock(node, env)
-	case ast.FUNC:
-		env.Set(node.Ident, genFuncObj(node, env))
+	case *ast.FuncStmt:
+		env.Set(node.(*ast.FuncStmt).Name, genFuncObj(node, env))
 		return NULL
-	case ast.CALL:
-		return evalCallFunc(node, env)
-	case ast.PA:
-		return evalExtendAssign(node, env, ast.ADD)
-	case ast.MA:
-		return evalExtendAssign(node, env, ast.SUB)
-	case ast.AA:
-		return evalExtendAssign(node, env, ast.MUL)
-	case ast.SA:
-		return evalExtendAssign(node, env, ast.DIV)
 	}
 
-	lhs := Eval(node.Lhs, env)
-	rhs := Eval(node.Rhs, env)
-
-	return evalIntegerExpression(node.NodeKind, lhs, rhs)
+	return newError("エラー")
 }

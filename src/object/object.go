@@ -37,7 +37,7 @@ func (e *Error) Inspect() string {
 }
 
 type Integer struct {
-	Value int
+	Value int64
 }
 func (i *Integer) Type() ObjectType {
 	return INTEGER
@@ -75,8 +75,8 @@ func (r *ReturnValue) Inspect() string {
 }
 
 type Function struct {
-	Params []*ast.Node
-	Body *ast.Node
+	Params []*ast.Ident
+	Body *ast.BlockStmt
 }
 func (f *Function) Type() ObjectType {
 	return FUNCTION
@@ -84,7 +84,7 @@ func (f *Function) Type() ObjectType {
 func (f *Function) Inspect() string {
 	params := []string{}
 	for _, v := range f.Params {
-		params = append(params, v.Ident)
+		params = append(params, v.Name)
 	}
 
 	return fmt.Sprintf("関数(%s)\n", strings.Join(params, ","))

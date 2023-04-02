@@ -267,6 +267,7 @@ func (p *Parser) parsePostIdentFunc() *ast.FuncStmt {
 	}
 
 	funcNode := &ast.FuncStmt{Token: p.curToken, Name: p.curToken.Literal}
+	p.nextToken()
 	funcNode.Body = p.parseBlockStmt()
 	funcNode.Params = params
 	return funcNode
@@ -353,6 +354,7 @@ func (p *Parser) parseParen() ast.Expr {
 			return expressions[0]
 		} else if p.curTokenIs(token.IDENT) {
 			node := &ast.CallExpr{Token: p.curToken, Name: p.curToken.Literal}
+			p.nextToken()
 			for _, v := range expressions {
 				node.Params = append(node.Params, v)
 			}
