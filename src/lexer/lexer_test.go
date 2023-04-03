@@ -37,6 +37,10 @@ func tokenKindToString(kind token.TokenKind) string {
 		res = "LBRACE"
 	case token.RBRACE:
 		res ="RBRACE"
+	case token.L_SQUARE_BRACE:
+		res = "L_SQUARE_BRACE"
+	case token.R_SQUARE_BRACE:
+		res = "R_SQUARE_BRACE"
 	case token.ASSIGN:
 		res = "ASSIGN"
 	case token.EQ:
@@ -65,7 +69,7 @@ func tokenKindToString(kind token.TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（）「」 == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾ % ％ += ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝
+	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（） 「」  == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾ % ％ += ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝ []
 	`
 
 	tests := []struct {
@@ -139,6 +143,8 @@ func TestToken(t *testing.T) {
 		{token.SA, "/="},
 		{token.SA, "／＝"},
 		{token.SA, "÷＝"},
+		{token.L_SQUARE_BRACE, "["},
+		{token.R_SQUARE_BRACE, "]"},
 		{token.EOF, ""},
 	}
 

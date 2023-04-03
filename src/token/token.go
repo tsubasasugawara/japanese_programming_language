@@ -28,10 +28,12 @@ const (
 	EQ // ==, ＝＝
 	NOT_EQ // !=, ！＝
 
-	LPAREN // (,（
-	RPAREN // ),）
+	LPAREN // (,（, 「
+	RPAREN // ), ）, 」
 	LBRACE // {, ｛
 	RBRACE // }, ｝
+	L_SQUARE_BRACE // [
+	R_SQUARE_BRACE // ],
 
 	COMMA //, 、
 

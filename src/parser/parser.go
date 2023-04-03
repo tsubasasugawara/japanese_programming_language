@@ -191,10 +191,20 @@ func (p *Parser) primary() ast.Expr {
 
 	if p.curTokenIs(token.IDENT) {
 		node := p.parseIdentifier()
+
 		if p.expect(token.LPAREN) {
 			return p.parseCallFunc(node.Name)
 		}
+
+		if p.curTokenIs(token.L_SQUARE_BRACE) {
+			return p.parseCallArray(node)
+		}
+
 		return node
+	}
+
+	if p.curTokenIs(token.LBRACE) {
+		return p.parseListElements()
 	}
 
 	if p.curToken != nil && p.curTokenIs(token.INTEGER) {
@@ -380,6 +390,21 @@ func (p *Parser) parseIdentifier() *ast.Ident {
 	return node
 }
 
+func (p *Parser) parseCallArray(node *ast.Ident) *ast.IndexExpr {
+	array := &ast.IndexExpr{Token: p.curToken, Ident: node}
+	p.nextToken()
+
+	index := p.expr()
+
+	if !p.expect(token.R_SQUARE_BRACE) {
+		p.error(ast.MISSING_R_SQUARE_BRACE, "括弧が閉じていません。")
+		return nil
+	}
+
+	array.Index = index
+	return array
+}
+
 // parseIdentifierで返ってきたnodeを引数に使用する
 func (p *Parser) parseCallFunc(identifier string) *ast.CallExpr {
 	node := &ast.CallExpr{Token: p.curToken, Name: identifier}
@@ -395,4 +420,25 @@ func (p *Parser) parseCallFunc(identifier string) *ast.CallExpr {
 
 	p.error(ast.MISSING_RPAREN, "括弧を閉じてください。")
 	return nil
+}
+
+func (p *Parser) parseListElements() *ast.ArrayExpr {
+	array := &ast.ArrayExpr{Token: p.curToken, Elements: []ast.Expr{}}
+
+	if !p.expect(token.LBRACE) {
+		p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+		return nil
+	}
+
+	array.Elements = append(array.Elements, p.expr())
+	for p.expect(token.COMMA) {
+		array.Elements = append(array.Elements, p.expr())
+	}
+
+	if !p.expect(token.RBRACE) {
+		p.error(ast.MISSING_R_SQUARE_BRACE, "括弧が閉じていません。")
+		return nil
+	}
+
+	return array
 }

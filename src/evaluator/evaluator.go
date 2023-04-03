@@ -141,6 +141,22 @@ func evalPrefixExpr(node ast.Node, env *object.Environment) object.Object {
 	return newError("対応していない型が検出されました。")
 }
 
+func evalIdent(node ast.Node, env *object.Environment) object.Object {
+	object, ok := env.Get(node.(*ast.Ident).Name)
+	if !ok {
+		return newError("変数が宣言されていません")
+	}
+	return object
+}
+
+func evalReturnStmt(node ast.Node, env *object.Environment) object.Object {
+	val := Eval(node.(*ast.ReturnStmt).Value, env)
+	if isError(val) {
+		return val
+	}
+	return &object.ReturnValue{Value: val}
+}
+
 func evalIfStatement(node ast.Node, env *object.Environment) object.Object {
 	stmt := node.(*ast.IfStmt)
 	condition := Eval(stmt.Condition, env)
@@ -248,6 +264,45 @@ func evalCallFunc(node ast.Node, env *object.Environment) object.Object {
 	return NULL
 }
 
+func evalArrayExpr(node ast.Node, env *object.Environment) object.Object {
+	arrayExpr := node.(*ast.ArrayExpr)
+
+	elements := []object.Object{}
+	for _, v := range arrayExpr.Elements {
+		elements = append(elements, Eval(v, env))
+	}
+
+	return &object.Array{Elements: elements}
+}
+
+func evalIndexExpr(node ast.Node, env *object.Environment) object.Object {
+	ident := node.(*ast.IndexExpr).Ident
+	if ident == nil {
+		return newError("識別子が必要です。")
+	}
+
+	o, ok := env.Get(ident.Name)
+	if !ok {
+		return newError("配列が宣言されていません。")
+	}
+
+	array, ok := o.(*object.Array)
+	if !ok {
+		return newError("配列ではありません。")
+	}
+
+	index, ok := (Eval(node.(*ast.IndexExpr).Index, env)).(*object.Integer)
+	if !ok {
+		return newError("数値が必要です。")
+	}
+
+	if int64(len(array.Elements)) <= index.Value || index.Value < 0 {
+		return newError("範囲外です。")
+	}
+
+	return array.Elements[index.Value]
+}
+
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node.(type) {
 	case *ast.InfixExpr:
@@ -255,23 +310,19 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.PrefixExpr:
 		return evalPrefixExpr(node, env)
 	case *ast.Ident:
-		object, ok := env.Get(node.(*ast.Ident).Name)
-		if !ok {
-			return newError("変数が宣言されていません")
-		}
-		return object
+		return evalIdent(node, env)
 	case *ast.Integer:
 		return &object.Integer{Value: node.(*ast.Integer).Value}
 	case *ast.CallExpr:
 		return evalCallFunc(node, env)
+	case *ast.ArrayExpr:
+		return evalArrayExpr(node, env)
+	case *ast.IndexExpr:
+		return evalIndexExpr(node, env)
 	case *ast.ExprStmt:
 		return Eval(node.(*ast.ExprStmt).Expr, env)
 	case *ast.ReturnStmt:
-		val := Eval(node.(*ast.ReturnStmt).Value, env)
-		if isError(val) {
-			return val
-		}
-		return &object.ReturnValue{Value: val}
+		return evalReturnStmt(node, env)
 	case *ast.IfStmt:
 		return evalIfStatement(node, env)
 	case *ast.ForStmt:

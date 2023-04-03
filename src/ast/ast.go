@@ -45,10 +45,15 @@ type (
 		Name string
 	}
 
-	Array struct {
+	ArrayExpr struct {
 		Token *token.Token
-		Name string
 		Elements []Expr
+	}
+
+	IndexExpr struct {
+		Token *token.Token
+		Ident *Ident
+		Index Expr
 	}
 
 	Integer struct {
@@ -77,14 +82,16 @@ type (
 )
 
 func (i *Ident) exprNode() {}
-func (a *Array) exprNode() {}
+func (a *ArrayExpr) exprNode() {}
+func (i *IndexExpr) exprNode() {}
 func (i *Integer) exprNode() {}
 func (p *PrefixExpr) exprNode() {}
 func (i *InfixExpr) exprNode() {}
 func (c *CallExpr) exprNode() {}
 
 func (i *Ident) Literal() string { return i.Token.Literal }
-func (a *Array) Literal() string { return a.Token.Literal }
+func (a *ArrayExpr) Literal() string { return a.Token.Literal }
+func (i *IndexExpr) Literal() string { return i.Token.Literal }
 func (i *Integer) Literal() string { return i.Token.Literal }
 func (p *PrefixExpr) Literal() string { return p.Token.Literal }
 func (i *InfixExpr) Literal() string { return i.Token.Literal }

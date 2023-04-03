@@ -8,6 +8,7 @@ const (
 	// シンタックスエラー
 	MISSING_RPAREN 						= "括弧が閉じていません"
 	MISSING_RBRACE 						= "括弧が閉じていません"
+	MISSING_R_SQUARE_BRACE				= "括弧が閉じていません"
 	MISSING_FUNCTION_NAME 				= "関数名が指定されていません"
 
 	UNEXPECTED_TOKEN					= "予期しないトークンがあります"

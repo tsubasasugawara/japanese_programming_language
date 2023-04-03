@@ -44,7 +44,7 @@ func Start(in io.Reader, out io.Writer) {
 			stmtNotCompleted := false //括弧が閉じているかどうか
 			for _, err := range errors {
 				e, ok := err.(*ast.SyntaxError)
-				if ok && (e.Category() == ast.MISSING_RBRACE || e.Category() == ast.MISSING_RPAREN) {
+				if ok && (e.Category() == ast.MISSING_RBRACE || e.Category() == ast.MISSING_RPAREN || e.Category() == ast.MISSING_R_SQUARE_BRACE) {
 					prompt = MULTI_LINE_PROMPT
 					stmtNotCompleted = true
 				}

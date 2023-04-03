@@ -449,3 +449,120 @@ func TestExtendAssign(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexExpr(t *testing.T) {
+	tests := []struct {
+		input string
+		identifier string
+		index int64
+	}{
+		{"a[10]", "a", 10},
+		{"a[109]", "a", 109},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.IndexExpr)
+			if !ok {
+				t.Fatalf("node is not *ast.IndexExpr. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			if node.Ident == nil {
+				t.Fatalf("node.Ident is nil")
+			}
+			
+			if node.Ident.Name != v.identifier {
+				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
+			}
+
+			index, ok := node.Index.(*ast.Integer)
+			if !ok {
+				t.Fatalf("index is not *ast.Integer. got=%T", node.Index)
+			}
+
+			if !testLiteral(t, index, v.index) {
+				return
+			}
+		}
+	}
+}
+
+func TestInfixInIndexExpr(t *testing.T) {
+	tests := []struct {
+		input string
+		identifier string
+		left int64
+		operator ast.OperatorKind
+		right int64
+	}{
+		{"a[10+9]", "a", 10, ast.ADD, 9},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.IndexExpr)
+			if !ok {
+				t.Fatalf("node is not *ast.IndexExpr. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			if node.Ident == nil {
+				t.Fatalf("node.Ident is nil")
+			}
+			
+			if node.Ident.Name != v.identifier {
+				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
+			}
+
+			index, ok := node.Index.(*ast.InfixExpr)
+			if !ok {
+				t.Fatalf("index is not *ast.InfixExpr. got=%T", node.Index)
+			}
+
+			if !testInfixExpr(t, index, v.left, v.operator, v.right) {
+				return
+			}
+		}
+	}
+}
+
+func TestListElements(t *testing.T) {
+	tests := []struct {
+		input string
+		elements []int64
+	}{
+		{"a = {1, 2, 3, 4}", []int64{1, 2, 3, 4}},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.InfixExpr)
+			if !ok {
+				t.Fatalf("node is not *ast.InfixExpr. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			elements, ok := node.Right.(*ast.ArrayExpr)
+			if !ok {
+				t.Fatalf("elements is not *ast.ArrayExpr. got=%T", node.Right)
+			}
+
+			if len(v.elements) != len(elements.Elements) {
+				t.Fatalf("elements.Elements is not %d expressions. got=%d", len(v.elements), len(elements.Elements))
+			}
+
+			for i, ele := range elements.Elements {
+				if !testInteger(t, ele, v.elements[i]) {
+					return
+				}
+			}
+		}
+	}
+}
