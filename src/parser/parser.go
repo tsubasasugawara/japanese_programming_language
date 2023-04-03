@@ -214,6 +214,9 @@ func (p *Parser) primary() ast.Expr {
 	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
 		p.error(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
 		p.nextToken()
+	} else if p.curToken != nil {
+		p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+		p.nextToken()
 	} else {
 		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 	}
@@ -234,11 +237,14 @@ func (p *Parser) parseFunctionParams() []*ast.Ident {
 		return params
 	}
 
-	for p.curTokenIs(token.IDENT) {
-		param := &ast.Ident{Token: p.curToken, Name: p.curToken.Literal}
-		params = append(params, param)
+	if p.curTokenIs(token.IDENT) {
+		params = append(params, &ast.Ident{Token: p.curToken, Name: p.curToken.Literal})
 		p.nextToken()
-		p.expect(token.COMMA)
+		for p.expect(token.COMMA) {
+			param := &ast.Ident{Token: p.curToken, Name: p.curToken.Literal}
+			params = append(params, param)
+			p.nextToken()
+		}
 	}
 
 	if !p.expect(token.RPAREN) {
@@ -349,9 +355,14 @@ func (p *Parser) parseParen() ast.Expr {
 	}
 
 	expressions := []ast.Expr{}
-	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
+	expr := p.expr()
+	if expr == nil {
+		return nil
+	}
+
+	expressions = append(expressions, expr)
+	for p.expect(token.COMMA) {
 		expressions  = append(expressions, p.expr())
-		p.expect(token.COMMA)
 	}
 
 	if p.curTokenIs(token.EOF) {
@@ -405,15 +416,20 @@ func (p *Parser) parseCallArray(node *ast.Ident) *ast.IndexExpr {
 	return array
 }
 
-// parseIdentifierで返ってきたnodeを引数に使用する
+// parseIdentifierで返ってきた識別子を引数に使用する
 func (p *Parser) parseCallFunc(identifier string) *ast.CallExpr {
 	node := &ast.CallExpr{Token: p.curToken, Name: identifier}
 
-	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
-		node.Params = append(node.Params, p.expr())
-		p.expect(token.COMMA)
+	expr := p.expr()
+	if expr == nil {
+		return nil
 	}
 
+	node.Params = append(node.Params, expr)
+	for p.expect(token.COMMA) {
+		node.Params = append(node.Params, p.expr())
+	}
+	
 	if p.expect(token.RPAREN) {
 		return node
 	}
@@ -430,7 +446,12 @@ func (p *Parser) parseListElements() *ast.ArrayExpr {
 		return nil
 	}
 
-	array.Elements = append(array.Elements, p.expr())
+	expr := p.expr()
+	if expr == nil {
+		return nil
+	}
+
+	array.Elements = append(array.Elements, expr)
 	for p.expect(token.COMMA) {
 		array.Elements = append(array.Elements, p.expr())
 	}
