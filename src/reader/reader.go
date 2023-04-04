@@ -35,6 +35,7 @@ func Read(path string) {
 		res := evaluator.Eval(v, env)
 		if res.Type() == object.ERROR {
 			fmt.Println(res.Inspect())
+			break
 		}
 	}
 }

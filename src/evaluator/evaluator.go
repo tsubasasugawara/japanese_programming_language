@@ -160,20 +160,27 @@ func evalReturnStmt(node ast.Node, env *object.Environment) object.Object {
 func evalIfStatement(node ast.Node, env *object.Environment) object.Object {
 	stmt := node.(*ast.IfStmt)
 	condition := Eval(stmt.Condition, env)
+	var res object.Object = NULL
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthly(condition) {
-		Eval(stmt.Body, env)
+		res = Eval(stmt.Body, env)
 	} else if stmt.Else != nil {
-		Eval(stmt.Else, env)
+		res = Eval(stmt.Else, env)
 	}
-	return NULL
+
+	if res.Type() == object.ERROR {
+		return res
+	} else {
+		return NULL
+	}
 }
 
 func evalForStatement(node ast.Node, env *object.Environment) object.Object {
 	stmt := node.(*ast.ForStmt)
+	var res object.Object = NULL
 	for {
 		condition := Eval(stmt.Condition, env)
 		if isError(condition) {
@@ -181,10 +188,16 @@ func evalForStatement(node ast.Node, env *object.Environment) object.Object {
 		}
 
 		if isTruthly(condition) {
-			Eval(stmt.Body, env)
+			res = Eval(stmt.Body, env)
 		} else {
-			return NULL
+			break
 		}
+	}
+
+	if res.Type() == object.ERROR {
+		return res
+	} else {
+		return NULL
 	}
 }
 
@@ -314,7 +327,7 @@ func evalIndexExpr(node ast.Node, env *object.Environment) object.Object {
 		elements = a.Elements
 	}
 
-	index, ok := indexList[len(indexList) - 1].(*ast.Integer)
+	index, ok := (Eval(indexList[len(indexList) - 1], env)).(*object.Integer)
 	if !ok {
 		return newError("数値が必要です。")
 	}
