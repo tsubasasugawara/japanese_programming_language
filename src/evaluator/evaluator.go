@@ -36,6 +36,57 @@ func isTruthly(obj object.Object) bool {
 	}
 }
 
+func accessToElementOfList(expr *ast.IndexExpr, env *object.Environment, dataToSet object.Object) object.Object {
+	ident := expr.Ident
+	if ident == nil {
+		return newError("識別子が必要です。")
+	}
+
+	o, ok := env.Get(ident.Name)
+	if !ok {
+		return newError("配列が宣言されていません。")
+	}
+	
+	array, ok := o.(*object.Array)
+	if !ok {
+		return newError("配列ではありません。")
+	}
+
+	indexList := expr.IndexList
+	elements := &(array.Elements)
+	for n, ele := range indexList {
+		index, ok := (Eval(ele, env)).(*object.Integer)
+		if !ok {
+			return newError("数値が必要です。")
+		}
+		if int64(len(*elements)) <= index.Value || index.Value < 0 {
+			return newError("範囲外です。")
+		}
+		
+		_, ok = (*elements)[index.Value].(*object.Array)
+		if !ok {
+			if n < len(indexList) - 1 {
+				return newError("範囲外です。")
+			}
+			break
+		}
+		
+		elements = &((*elements)[index.Value].(*object.Array).Elements)
+	}
+	
+	index, ok := (Eval(indexList[len(indexList) - 1], env)).(*object.Integer)
+	if !ok {
+		return newError("数値が必要です。")
+	}
+
+	if dataToSet != nil {
+		(*elements)[index.Value] = dataToSet
+		return NULL
+	}
+
+	return (*elements)[index.Value]
+}
+
 func evalInfixExpr(node ast.Node, env *object.Environment) object.Object {
 	expr := node.(*ast.InfixExpr)
 
@@ -44,12 +95,18 @@ func evalInfixExpr(node ast.Node, env *object.Environment) object.Object {
 		return evalExtendAssign(expr, env, expr.Operator)
 	case ast.ASSIGN:
 		val := Eval(expr.Right, env)
-		left, ok := expr.Left.(*ast.Ident)
-		if !ok {
-			return newError("変数が必要です。")
+		left := expr.Left
+
+		switch left.(type) {
+		case *ast.Ident:
+			env.Set(left.(*ast.Ident).Name, val)
+			return NULL
+		case *ast.IndexExpr:
+			accessToElementOfList(left.(*ast.IndexExpr), env, val)
+			return NULL
 		}
-		env.Set(left.Name, val)
-		return NULL
+
+		return newError("変数が必要です。")
 	}
 
 	left := Eval(expr.Left, env)
@@ -288,52 +345,6 @@ func evalArrayExpr(node ast.Node, env *object.Environment) object.Object {
 	return &object.Array{Elements: elements}
 }
 
-// TODO: リファクタリング
-func evalIndexExpr(node ast.Node, env *object.Environment) object.Object {
-	ident := node.(*ast.IndexExpr).Ident
-	if ident == nil {
-		return newError("識別子が必要です。")
-	}
-
-	o, ok := env.Get(ident.Name)
-	if !ok {
-		return newError("配列が宣言されていません。")
-	}
-
-	array, ok := o.(*object.Array)
-	if !ok {
-		return newError("配列ではありません。")
-	}
-
-	indexList := node.(*ast.IndexExpr).IndexList
-	elements := array.Elements
-	for n, ele := range indexList {
-		index, ok := (Eval(ele, env)).(*object.Integer)
-		if !ok {
-			return newError("数値が必要です。")
-		}
-		if int64(len(elements)) <= index.Value || index.Value < 0 {
-			return newError("範囲外です。")
-		}
-
-		a, ok := elements[index.Value].(*object.Array)
-		if !ok {
-			if n < len(indexList) - 1 {
-				return newError("範囲外です。")
-			}
-			break
-		}
-
-		elements = a.Elements
-	}
-
-	index, ok := (Eval(indexList[len(indexList) - 1], env)).(*object.Integer)
-	if !ok {
-		return newError("数値が必要です。")
-	}
-	return elements[index.Value]
-}
-
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node.(type) {
 	case *ast.InfixExpr:
@@ -349,7 +360,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.ArrayExpr:
 		return evalArrayExpr(node, env)
 	case *ast.IndexExpr:
-		return evalIndexExpr(node, env)
+		return accessToElementOfList(node.(*ast.IndexExpr), env, nil)
 	case *ast.ExprStmt:
 		return Eval(node.(*ast.ExprStmt).Expr, env)
 	case *ast.ReturnStmt:
