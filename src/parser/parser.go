@@ -74,7 +74,7 @@ func (p *Parser) stmt() ast.Stmt {
 
 	node := p.expr()
 	if node == nil {
-		return &ast.ExprStmt{Expr: node}
+		return &ast.ExprStmt{Expr: nil}
 	}
 
 	p.expect(token.THEN)
@@ -406,13 +406,23 @@ func (p *Parser) parseCallArray(node *ast.Ident) *ast.IndexExpr {
 	p.nextToken()
 
 	index := p.expr()
-
+	if index == nil {
+		return nil
+	}
 	if !p.expect(token.R_SQUARE_BRACE) {
 		p.error(ast.MISSING_R_SQUARE_BRACE, "括弧が閉じていません。")
 		return nil
 	}
+	array.IndexList = append(array.IndexList, index)
 
-	array.Index = index
+	for p.expect(token.L_SQUARE_BRACE) {
+		array.IndexList = append(array.IndexList, p.expr())
+		if !p.expect(token.R_SQUARE_BRACE) {
+			p.error(ast.MISSING_R_SQUARE_BRACE, "括弧が閉じていません。")
+			return nil
+		}
+	}
+
 	return array
 }
 

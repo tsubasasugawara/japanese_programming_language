@@ -454,10 +454,11 @@ func TestIndexExpr(t *testing.T) {
 	tests := []struct {
 		input string
 		identifier string
-		index int64
+		indexList []int64
 	}{
-		{"a[10]", "a", 10},
-		{"a[109]", "a", 109},
+		{"a[10]", "a", []int64{10}},
+		{"a[109]", "a", []int64{109}},
+		{"a[109][45][32]", "a", []int64{109, 45, 32}},
 	}
 
 	for _, v := range tests {
@@ -478,27 +479,51 @@ func TestIndexExpr(t *testing.T) {
 				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
 			}
 
-			index, ok := node.Index.(*ast.Integer)
-			if !ok {
-				t.Fatalf("index is not *ast.Integer. got=%T", node.Index)
+			indexList := node.IndexList
+			if len(indexList) != len(v.indexList) {
+				t.Fatalf("indexList is not %d indexes. got=%d", len(v.indexList), len(indexList))
 			}
 
-			if !testLiteral(t, index, v.index) {
-				return
+			for i, ele := range indexList {
+				index, ok := ele.(*ast.Integer)
+				if !ok {
+					t.Fatalf("index is not *ast.Integer. got=%T", ele)
+				}
+				if !testLiteral(t, index, v.indexList[i]) {
+					return
+				}
 			}
 		}
 	}
 }
 
 func TestInfixInIndexExpr(t *testing.T) {
-	tests := []struct {
-		input string
-		identifier string
+	type IndexList struct {
 		left int64
 		operator ast.OperatorKind
 		right int64
+	}
+
+	tests := []struct {
+		input string
+		identifier string
+		indexList []IndexList
 	}{
-		{"a[10+9]", "a", 10, ast.ADD, 9},
+		{
+			"a[10+9]",
+			"a",
+			[]IndexList{
+				IndexList{left: 10, operator: ast.ADD, right: 9},
+			},
+		},
+		{
+			"a[10+9][9*8]",
+			"a",
+			[]IndexList{
+				IndexList{left: 10, operator: ast.ADD, right: 9},
+				IndexList{left: 9, operator: ast.MUL, right: 8},
+			},
+		},
 	}
 
 	for _, v := range tests {
@@ -519,13 +544,19 @@ func TestInfixInIndexExpr(t *testing.T) {
 				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
 			}
 
-			index, ok := node.Index.(*ast.InfixExpr)
-			if !ok {
-				t.Fatalf("index is not *ast.InfixExpr. got=%T", node.Index)
+			indexList := node.IndexList
+			if len(indexList) != len(v.indexList) {
+				t.Fatalf("indexList is not %d indexes. got=%d", len(v.indexList), len(indexList))
 			}
 
-			if !testInfixExpr(t, index, v.left, v.operator, v.right) {
-				return
+			for i, ele := range indexList {
+				index, ok := ele.(*ast.InfixExpr)
+				if !ok {
+					t.Fatalf("index is not *ast.InfixExpr. got=%T", ele)
+				}
+				if !testInfixExpr(t, index, v.indexList[i].left, v.indexList[i].operator, v.indexList[i].right) {
+					return
+				}
 			}
 		}
 	}

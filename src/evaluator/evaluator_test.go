@@ -361,3 +361,41 @@ func TestArray(t *testing.T) {
 		t.Fatalf("got=%s expect=5\n", val)
 	}
 }
+
+func TestMultidimensionalArray(t *testing.T) {
+	input := `
+	a = {{1, 2}, {3, 4}}
+	a[0][0]
+	a[0][1]
+	a[1][0]
+	a[1][1]
+	`
+	head := lexer.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatal("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v1 := Eval(program.Nodes[1], env)
+	v2 := Eval(program.Nodes[2], env)
+	v3 := Eval(program.Nodes[3], env)
+	v4 := Eval(program.Nodes[4], env)
+
+	if val := v1.Inspect(); val != "1" {
+		t.Fatalf("got=%s expect=1\n", val)
+	}
+
+	if val := v2.Inspect(); val != "2" {
+		t.Fatalf("got=%s expect=2\n", val)
+	}
+
+	if val := v3.Inspect(); val != "3" {
+		t.Fatalf("got=%s expect=3\n", val)
+	}
+
+	if val := v4.Inspect(); val != "4" {
+		t.Fatalf("got=%s expect=4\n", val)
+	}
+}

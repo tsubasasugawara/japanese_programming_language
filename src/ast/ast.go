@@ -53,7 +53,7 @@ type (
 	IndexExpr struct {
 		Token *token.Token
 		Ident *Ident
-		Index Expr
+		IndexList []Expr
 	}
 
 	Integer struct {

@@ -275,6 +275,7 @@ func evalArrayExpr(node ast.Node, env *object.Environment) object.Object {
 	return &object.Array{Elements: elements}
 }
 
+// TODO: リファクタリング
 func evalIndexExpr(node ast.Node, env *object.Environment) object.Object {
 	ident := node.(*ast.IndexExpr).Ident
 	if ident == nil {
@@ -291,16 +292,33 @@ func evalIndexExpr(node ast.Node, env *object.Environment) object.Object {
 		return newError("配列ではありません。")
 	}
 
-	index, ok := (Eval(node.(*ast.IndexExpr).Index, env)).(*object.Integer)
+	indexList := node.(*ast.IndexExpr).IndexList
+	elements := array.Elements
+	for n, ele := range indexList {
+		index, ok := (Eval(ele, env)).(*object.Integer)
+		if !ok {
+			return newError("数値が必要です。")
+		}
+		if int64(len(elements)) <= index.Value || index.Value < 0 {
+			return newError("範囲外です。")
+		}
+
+		a, ok := elements[index.Value].(*object.Array)
+		if !ok {
+			if n < len(indexList) - 1 {
+				return newError("範囲外です。")
+			}
+			break
+		}
+
+		elements = a.Elements
+	}
+
+	index, ok := indexList[len(indexList) - 1].(*ast.Integer)
 	if !ok {
 		return newError("数値が必要です。")
 	}
-
-	if int64(len(array.Elements)) <= index.Value || index.Value < 0 {
-		return newError("範囲外です。")
-	}
-
-	return array.Elements[index.Value]
+	return elements[index.Value]
 }
 
 func Eval(node ast.Node, env *object.Environment) object.Object {
