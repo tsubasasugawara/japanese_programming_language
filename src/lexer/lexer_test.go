@@ -61,6 +61,10 @@ func tokenKindToString(kind token.TokenKind) string {
 		res = "IDENT"
 	case token.COMMA:
 		res = "COMMA"
+	case token.TRUE:
+		res = "TRUE"
+	case token.FALSE:
+		res = "FALSE"
 	default:
 		res = "ILLEGAL"
 	}
@@ -69,7 +73,17 @@ func tokenKindToString(kind token.TokenKind) string {
 
 func TestToken(t *testing.T) {
 	input := `
-	+ ＋  - ー * ＊ × / ／ ÷ 　21 02356 ０９ １２０ ()（） 「」  == ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝ あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す {} ｛｝ 関数 , 、 ^ ＾ % ％ += ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝ []
+	+ ＋  - ー * ＊ × / ／ ÷ 　
+	21 02356 ０９ １２０
+	()（） 「」
+	== ＝＝ != ！＝ < ＜ <= ＜＝ > ＞ >= ＞＝
+	あ 日 a z ア A Z こんにちは 世界 戻す もし それ以外 ならば 繰り返す
+	{} ｛｝
+	関数
+	, 、 ^ ＾ % ％
+	+= ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝
+	[]
+	真 偽
 	`
 
 	tests := []struct {
@@ -145,6 +159,8 @@ func TestToken(t *testing.T) {
 		{token.SA, "÷＝"},
 		{token.L_SQUARE_BRACE, "["},
 		{token.R_SQUARE_BRACE, "]"},
+		{token.TRUE, "真"},
+		{token.FALSE, "偽"},
 		{token.EOF, ""},
 	}
 

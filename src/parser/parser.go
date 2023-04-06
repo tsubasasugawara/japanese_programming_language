@@ -207,8 +207,13 @@ func (p *Parser) primary() ast.Expr {
 		return p.parseListElements()
 	}
 
-	if p.curToken != nil && p.curTokenIs(token.INTEGER) {
-		return p.parseInteger()
+	if p.curToken != nil {
+		switch p.curToken.Kind {
+		case token.INTEGER:
+			return p.parseInteger()
+		case token.TRUE, token.FALSE:
+			return p.parseBoolean()
+		}
 	}
 
 	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
@@ -382,7 +387,7 @@ func (p *Parser) parseParen() ast.Expr {
 			return node
 		}
 	}
-	
+
 	p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
 	return nil
 }
@@ -391,6 +396,15 @@ func (p *Parser) parseInteger() *ast.Integer {
 	str := utils.ToLower(p.curToken.Literal)
 	num, _ := strconv.ParseInt(str, 10, 64)
 	node := &ast.Integer{Token: p.curToken, Value: num}
+	p.nextToken()
+	return node
+}
+
+func (p *Parser) parseBoolean() *ast.Boolean {
+	node := &ast.Boolean{Token: p.curToken, Value: false}
+	if node.Token.Kind == token.TRUE {
+		node.Value = true
+	}
 	p.nextToken()
 	return node
 }
@@ -439,7 +453,7 @@ func (p *Parser) parseCallFunc(identifier string) *ast.CallExpr {
 	for p.expect(token.COMMA) {
 		node.Params = append(node.Params, p.expr())
 	}
-	
+
 	if p.expect(token.RPAREN) {
 		return node
 	}

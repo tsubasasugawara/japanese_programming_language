@@ -41,6 +41,8 @@ func testLiteral(t *testing.T, expr ast.Expr, expected interface{}) bool {
 		return testInteger(t, expr, int64(v))
 	case string:
 		return testIdentifier(t, expr, string(v))
+	case bool:
+		return testBoolean(t, expr, bool(v))
 	}
 	t.Errorf("type of expr not handled. got=%T", expr)
 	return false
@@ -70,6 +72,21 @@ func testIdentifier(t *testing.T, identExpr ast.Expr, value string) bool {
 
 	if ident.Name != value {
 		t.Errorf("ident.Name not %s. got=%s", value, ident.Name)
+		return false
+	}
+
+	return true
+}
+
+func testBoolean(t *testing.T, boolExpr ast.Expr, value bool) bool {
+	boolean, ok := boolExpr.(*ast.Boolean)
+	if ! ok {
+		t.Errorf("boolExpr is not *ast.Boolean. got=%T", boolExpr)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf("boolean.Value is not %t. got=%t", value, boolean.Value)
 		return false
 	}
 
@@ -436,7 +453,7 @@ func TestExtendAssign(t *testing.T) {
 	{"a *= 3", "a", ast.AA, 3},
 	{"a /= 4", "a", ast.SA, 4},
 	}
-	
+
 	for _, v := range tests {
 		head := lexer.Tokenize(v.input)
 		program, _ := Parse(head)
@@ -474,7 +491,7 @@ func TestIndexExpr(t *testing.T) {
 			if node.Ident == nil {
 				t.Fatalf("node.Ident is nil")
 			}
-			
+
 			if node.Ident.Name != v.identifier {
 				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
 			}
@@ -539,7 +556,7 @@ func TestInfixInIndexExpr(t *testing.T) {
 			if node.Ident == nil {
 				t.Fatalf("node.Ident is nil")
 			}
-			
+
 			if node.Ident.Name != v.identifier {
 				t.Fatalf("ident.Name is not %s. got=%s", v.identifier, node.Ident.Name)
 			}
@@ -593,6 +610,32 @@ func TestListElements(t *testing.T) {
 				if !testInteger(t, ele, v.elements[i]) {
 					return
 				}
+			}
+		}
+	}
+}
+
+func TestBoolean(t *testing.T) {
+	tests := []struct {
+		input string
+		expect bool
+	} {
+		{"真", true},
+		{"偽", false},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.Boolean)
+			if !ok {
+				t.Fatalf("node is not *ast.Boolean. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			if node.Value != v.expect {
+				t.Fatalf("node.Value is not %t. got=%t", v.expect, node.Value)
 			}
 		}
 	}

@@ -46,7 +46,7 @@ func accessToElementOfList(expr *ast.IndexExpr, env *object.Environment, dataToS
 	if !ok {
 		return newError("配列が宣言されていません。")
 	}
-	
+
 	array, ok := o.(*object.Array)
 	if !ok {
 		return newError("配列ではありません。")
@@ -62,7 +62,7 @@ func accessToElementOfList(expr *ast.IndexExpr, env *object.Environment, dataToS
 		if int64(len(*elements)) <= index.Value || index.Value < 0 {
 			return newError("範囲外です。")
 		}
-		
+
 		_, ok = (*elements)[index.Value].(*object.Array)
 		if !ok {
 			if n < len(indexList) - 1 {
@@ -70,10 +70,10 @@ func accessToElementOfList(expr *ast.IndexExpr, env *object.Environment, dataToS
 			}
 			break
 		}
-		
+
 		elements = &((*elements)[index.Value].(*object.Array).Elements)
 	}
-	
+
 	index, ok := (Eval(indexList[len(indexList) - 1], env)).(*object.Integer)
 	if !ok {
 		return newError("数値が必要です。")
@@ -114,6 +114,8 @@ func evalInfixExpr(node ast.Node, env *object.Environment) object.Object {
 	switch right.(type) {
 	case *object.Integer:
 		return evalIntegerExpression(expr.Operator, left, right)
+	case *object.Boolean:
+		return evalBooleanExpression(expr.Operator, left, right)
 	}
 
 	return newError("対応していない型が検出されました")
@@ -145,6 +147,11 @@ func evalExtendAssign(node ast.Node, env *object.Environment, opeType ast.Operat
 		if isError(val) {
 			return val
 		}
+	case object.BOOLEAN:
+		val = evalBooleanExpression(opeType, lhs, rhs)
+		if isError(val) {
+			return val
+		}
 	default:
 		return newError("対応していない型が検出されました。")
 	}
@@ -155,7 +162,7 @@ func evalExtendAssign(node ast.Node, env *object.Environment, opeType ast.Operat
 
 func evalIntegerExpression(opeKind ast.OperatorKind, left object.Object, right object.Object) object.Object {
 	if left.Type() != object.INTEGER || right.Type() != object.INTEGER {
-		return newError("数値が必要です。")
+		return newError("異なる型での演算は出来ません。 左オペランド:%s 右オペランド:%s", left.Type(), right.Type())
 	}
 
 	lval := left.(*object.Integer).Value
@@ -182,6 +189,24 @@ func evalIntegerExpression(opeKind ast.OperatorKind, left object.Object, right o
 		return &object.Boolean{Value: lval < rval}
 	case ast.GE:
 		return &object.Boolean{Value: lval <= rval}
+	default:
+		return newError("対応していない演算子です")
+	}
+}
+
+func evalBooleanExpression(opeKind ast.OperatorKind, left object.Object, right object.Object) object.Object {
+	if left.Type() != object.BOOLEAN || right.Type() != object.BOOLEAN {
+		return newError("異なる型での演算は出来ません。 左オペランド:%s 右オペランド:%s", left.Type(), right.Type())
+	}
+
+	lval := left.(*object.Boolean).Value
+	rval := right.(*object.Boolean).Value
+
+	switch opeKind {
+	case ast.EQ:
+		return &object.Boolean{Value: lval == rval}
+	case ast.NOT_EQ:
+		return &object.Boolean{Value: lval != rval}
 	default:
 		return newError("対応していない演算子です")
 	}
@@ -355,6 +380,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIdent(node, env)
 	case *ast.Integer:
 		return &object.Integer{Value: node.(*ast.Integer).Value}
+	case *ast.Boolean:
+		return &object.Boolean{Value: node.(*ast.Boolean).Value}
 	case *ast.CallExpr:
 		return evalCallFunc(node, env)
 	case *ast.ArrayExpr:

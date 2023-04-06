@@ -18,7 +18,7 @@ type Stmt interface {
 	stmtNode()
 }
 
-type OperatorKind int 
+type OperatorKind int
 
 const (
 	ADD = iota // 足し算
@@ -61,6 +61,11 @@ type (
 		Value int64
 	}
 
+	Boolean struct {
+		Token *token.Token
+		Value bool
+	}
+
 	PrefixExpr struct {
 		Token *token.Token
 		Operator OperatorKind
@@ -85,6 +90,7 @@ func (i *Ident) exprNode() {}
 func (a *ArrayExpr) exprNode() {}
 func (i *IndexExpr) exprNode() {}
 func (i *Integer) exprNode() {}
+func (b *Boolean) exprNode() {}
 func (p *PrefixExpr) exprNode() {}
 func (i *InfixExpr) exprNode() {}
 func (c *CallExpr) exprNode() {}
@@ -93,6 +99,7 @@ func (i *Ident) Literal() string { return i.Token.Literal }
 func (a *ArrayExpr) Literal() string { return a.Token.Literal }
 func (i *IndexExpr) Literal() string { return i.Token.Literal }
 func (i *Integer) Literal() string { return i.Token.Literal }
+func (b *Boolean) Literal() string { return b.Token.Literal }
 func (p *PrefixExpr) Literal() string { return p.Token.Literal }
 func (i *InfixExpr) Literal() string { return i.Token.Literal }
 func (c *CallExpr) Literal() string { return c.Token.Literal }

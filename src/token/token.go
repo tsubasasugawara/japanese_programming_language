@@ -43,6 +43,8 @@ const (
 	THEN
 	FOR
 	FUNC
+	TRUE
+	FALSE
 
 	EOF
 	ILLEGAL
@@ -55,6 +57,8 @@ var Keywords = map[string]TokenKind{
 	"ならば" : THEN,
 	"繰り返す" : FOR,
 	"関数" : FUNC,
+	"真" : TRUE,
+	"偽" : FALSE,
 }
 
 type Token struct {
