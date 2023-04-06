@@ -28,6 +28,10 @@ const (
 	EQ // ==, ＝＝
 	NOT_EQ // !=, ！＝
 
+	AND // &&, ＆＆, かつ
+	OR // ||, ｜｜, または
+	NOT // !, ！, ではない
+
 	LPAREN // (,（, 「
 	RPAREN // ), ）, 」
 	LBRACE // {, ｛
@@ -56,9 +60,13 @@ var Keywords = map[string]TokenKind{
 	"それ以外" : ELSE,
 	"ならば" : THEN,
 	"繰り返す" : FOR,
+	"ならば繰り返す" : FOR,
 	"関数" : FUNC,
 	"真" : TRUE,
 	"偽" : FALSE,
+	"かつ" : AND,
+	"または" : OR,
+	"ではない" : NOT,
 }
 
 type Token struct {

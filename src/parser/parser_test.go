@@ -640,3 +640,54 @@ func TestBoolean(t *testing.T) {
 		}
 	}
 }
+
+func TestLogicalOperators(t *testing.T) {
+	tests := []struct {
+		input string
+		left interface{}
+		operator ast.OperatorKind
+		right interface{}
+	} {
+		{"真　かつ　真", true, ast.AND, true},
+		{"真　または　偽", true, ast.OR, false},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.InfixExpr)
+			if !ok {
+				t.Fatalf("node is not *ast.InfixExpr. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			if !testInfixExpr(t, node, v.left, v.operator, v.right) {
+				return
+			}
+		}
+	}
+}
+
+func TestNotOperator(t *testing.T) {
+	input := "!真"
+	head := lexer.Tokenize(input)
+	program, _ := Parse(head)
+	node, ok := program.Nodes[0].(*ast.ExprStmt).Expr.(*ast.PrefixExpr)
+	if !ok {
+		t.Fatalf("node is not *ast.PrefixExpr. got=%T", program.Nodes[0].(*ast.ExprStmt).Expr)
+	}
+
+	if node.Operator != ast.NOT {
+		t.Fatalf("node.Operator is not %d. got=%d", ast.NOT, node.Operator)
+	}
+
+	right, ok := node.Right.(*ast.Boolean)
+	if !ok {
+		t.Fatalf("right is not *ast.Boolean. got=%T", node.Right)
+	}	
+
+	if !right.Value {
+		t.Fatalf("right.Value is not true. got=%t", right.Value)
+	}
+}

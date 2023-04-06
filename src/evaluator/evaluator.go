@@ -207,6 +207,10 @@ func evalBooleanExpression(opeKind ast.OperatorKind, left object.Object, right o
 		return &object.Boolean{Value: lval == rval}
 	case ast.NOT_EQ:
 		return &object.Boolean{Value: lval != rval}
+	case ast.AND:
+		return &object.Boolean{Value: lval && rval}
+	case ast.OR:
+		return &object.Boolean{Value: lval || rval}
 	default:
 		return newError("対応していない演算子です")
 	}
@@ -215,9 +219,12 @@ func evalBooleanExpression(opeKind ast.OperatorKind, left object.Object, right o
 func evalPrefixExpr(node ast.Node, env *object.Environment) object.Object {
 	expr := node.(*ast.PrefixExpr)
 
-	switch expr.Right.(type) {
-	case *ast.Integer:
-		return evalIntegerExpression(expr.Operator, &object.Integer{Value: 0}, Eval(expr.Right, env))
+	right := Eval(expr.Right, env)
+	switch right.(type) {
+	case *object.Integer:
+		return evalIntegerExpression(expr.Operator, &object.Integer{Value: 0}, right)
+	case *object.Boolean:
+		return &object.Boolean{Value: !right.(*object.Boolean).Value}
 	}
 
 	return newError("対応していない型が検出されました。")

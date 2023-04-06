@@ -32,6 +32,9 @@ const (
 	GE // 以上
 	EQ // 等号
 	NOT_EQ // 不等号
+	AND // 論理席
+	OR // 論理和
+	NOT // 否定
 	PA // PLUS(ADD)+ASSIGN
 	MA // MINUS(SUB)+ASSIGN
 	SA // SLASH(DIV)+ASSIGN

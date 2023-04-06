@@ -399,3 +399,47 @@ func TestMultidimensionalArray(t *testing.T) {
 		t.Fatalf("got=%s expect=4\n", val)
 	}
 }
+
+func TestLogicalOperators(t *testing.T) {
+	input := `
+	a = 真　かつ　真
+	b = 真　かつ　偽
+	c =	偽　かつ　偽
+	d = 真　または　真
+	e = 真　または　偽
+	f = 偽　または　偽
+	g = !真
+	h = !偽
+
+	a
+	b
+	c
+	d
+	e
+	f
+	g
+	h
+	`
+	expect := []bool{true, false, false, true, true, false, false, true}
+	head := lexer.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatal("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	for i := 0; i < 8; i++ {
+		Eval(program.Nodes[i], env)
+	}
+
+	for i := 8; i < len(program.Nodes); i++ {
+		v := Eval(program.Nodes[i], env)
+		val, ok := v.(*object.Boolean)
+		if !ok {
+			t.Fatalf("val is not *object.Boolean. got=%T", v)
+		}
+		if val.Value != expect[i - 8] {
+			t.Fatalf("test%d : got=%t expect=%t", i - 8, val.Value, expect[i-8])
+		}
+	}
+}

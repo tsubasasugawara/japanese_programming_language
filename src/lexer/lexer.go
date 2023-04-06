@@ -200,10 +200,24 @@ func Tokenize(input string) *token.Token {
 				cur = token.NewToken(token.NOT_EQ, cur, string([]rune{l.ch, ch}))
 				l.readChar()
 			} else {
-				cur = token.NewToken(token.ILLEGAL, cur, string([]rune{l.ch, l.peekChar()}))
+				cur = token.NewToken(token.NOT, cur, string(l.ch))
 			}
 		case ',', '、', '，':
 			cur = token.NewToken(token.COMMA, cur, string(l.ch))
+		case '&', '＆':
+			if ch := l.peekChar(); ch == '&' || ch == '＆' {
+				cur = token.NewToken(token.AND, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = token.NewToken(token.ILLEGAL, cur, string(l.ch))
+			}
+		case '|', '｜':
+			if ch := l.peekChar(); ch == '|' || ch == '｜' {
+				cur = token.NewToken(token.OR, cur, string([]rune{l.ch, ch}))
+				l.readChar()
+			} else {
+				cur = token.NewToken(token.ILLEGAL, cur, string(l.ch))
+			}
 		case 0:
 			cur = token.NewToken(token.EOF, cur, "")
 		default:

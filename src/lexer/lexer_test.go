@@ -83,7 +83,10 @@ func TestToken(t *testing.T) {
 	, 、 ^ ＾ % ％
 	+= ＋＝ -= ー＝ *= ＊＝ ×＝ /= ／＝ ÷＝
 	[]
-	真 偽
+	真 偽 
+	&& ＆＆ かつ 
+	|| ｜｜ または 
+	!　！　ではない
 	`
 
 	tests := []struct {
@@ -161,6 +164,15 @@ func TestToken(t *testing.T) {
 		{token.R_SQUARE_BRACE, "]"},
 		{token.TRUE, "真"},
 		{token.FALSE, "偽"},
+		{token.AND, "&&"},
+		{token.AND, "＆＆"},
+		{token.AND, "かつ"},
+		{token.OR, "||"},
+		{token.OR, "｜｜"},
+		{token.OR, "または"},
+		{token.NOT, "!"},
+		{token.NOT, "！"},
+		{token.NOT, "ではない"},
 		{token.EOF, ""},
 	}
 

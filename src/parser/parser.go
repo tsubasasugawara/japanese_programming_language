@@ -94,7 +94,7 @@ func (p *Parser) expr() ast.Expr {
 }
 
 func (p *Parser) assign() ast.Expr {
-	node := p.equality()
+	node := p.logical()
 
 	if p.expect(token.ASSIGN) {
 		node = &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.ASSIGN, Right: p.assign()}
@@ -106,6 +106,18 @@ func (p *Parser) assign() ast.Expr {
 		node = &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.AA, Right: p.add()}
 	} else if p.expect(token.SA) {
 		node = &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.SA, Right: p.add()}
+	}
+
+	return node
+}
+
+func (p *Parser) logical() ast.Expr {
+	node := p.equality()
+
+	if p.expect(token.AND) {
+		node = &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.AND, Right: p.logical()}
+	} else if p.expect(token.OR) {
+		node = &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.OR, Right: p.logical()}
 	}
 
 	return node
@@ -180,7 +192,10 @@ func (p *Parser) unary() ast.Expr {
 		return &ast.PrefixExpr{Token: p.curToken, Operator: ast.ADD, Right: p.primary()}
 	} else if p.expect(token.MINUS) {
 		return &ast.PrefixExpr{Token: p.curToken, Operator: ast.SUB, Right: p.primary()}
+	} else if p.expect(token.NOT) {
+		return &ast.PrefixExpr{Token: p.curToken, Operator: ast.NOT, Right: p.primary()}
 	}
+
 	return p.primary()
 }
 
