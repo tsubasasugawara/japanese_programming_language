@@ -87,6 +87,7 @@ func TestToken(t *testing.T) {
 	&& ＆＆ かつ 
 	|| ｜｜ または 
 	!　！　ではない
+	~ 〜
 	`
 
 	tests := []struct {
@@ -173,6 +174,8 @@ func TestToken(t *testing.T) {
 		{token.NOT, "!"},
 		{token.NOT, "！"},
 		{token.NOT, "ではない"},
+		{token.RANGE, "~"},
+		{token.RANGE, "〜"},
 		{token.EOF, ""},
 	}
 

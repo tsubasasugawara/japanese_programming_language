@@ -39,6 +39,8 @@ func testLiteral(t *testing.T, expr ast.Expr, expected interface{}) bool {
 	switch v := expected.(type) {
 	case int64:
 		return testInteger(t, expr, int64(v))
+	case int:
+		return testInteger(t, expr, int64(v))
 	case string:
 		return testIdentifier(t, expr, string(v))
 	case bool:
@@ -689,5 +691,19 @@ func TestNotOperator(t *testing.T) {
 
 	if !right.Value {
 		t.Fatalf("right.Value is not true. got=%t", right.Value)
+	}
+}
+
+func TestGenList(t *testing.T) {
+	input := "5〜9"
+	head := lexer.Tokenize(input)
+	program, _ := Parse(head)
+	node, ok := program.Nodes[0].(*ast.ExprStmt).Expr.(*ast.InfixExpr)
+	if !ok {
+		t.Fatalf("node is not *ast.InfixExpr. got=%T", program.Nodes[0].(*ast.ExprStmt).Expr)
+	}
+
+	if !testInfixExpr(t, node, 5, ast.RANGE, 9) {
+		return
 	}
 }

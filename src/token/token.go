@@ -41,6 +41,8 @@ const (
 
 	COMMA //, 、
 
+	RANGE //~, 〜
+
 	RETURN
 	IF
 	ELSE

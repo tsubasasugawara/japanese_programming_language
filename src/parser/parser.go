@@ -138,7 +138,7 @@ func (p *Parser) equality() ast.Expr {
 }
 
 func (p *Parser) relational() ast.Expr {
-	node := p.add()
+	node := p.list()
 
 	for {
 		if p.expect(token.GT) {
@@ -153,6 +153,16 @@ func (p *Parser) relational() ast.Expr {
 			return node
 		}
 	}
+}
+
+func (p *Parser) list() ast.Expr {
+	node := p.add()
+
+	if p.expect(token.RANGE) {
+		return &ast.InfixExpr{Token: p.curToken, Left: node, Operator: ast.RANGE, Right: p.add()}
+	}
+
+	return node
 }
 
 func (p *Parser) add() ast.Expr {
@@ -222,23 +232,23 @@ func (p *Parser) primary() ast.Expr {
 		return p.parseListElements()
 	}
 
-	if p.curToken != nil {
-		switch p.curToken.Kind {
-		case token.INTEGER:
-			return p.parseInteger()
-		case token.TRUE, token.FALSE:
-			return p.parseBoolean()
-		}
+	if p.curToken == nil {
+		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 	}
 
-	if p.curToken != nil && p.curToken.Kind == token.ILLEGAL {
+	switch p.curToken.Kind {
+	case token.INTEGER:
+		return p.parseInteger()
+	case token.TRUE, token.FALSE:
+		return p.parseBoolean()
+	}
+
+	if p.curToken.Kind == token.ILLEGAL {
 		p.error(ast.ILLEGAL_CHARACTER, "対応していない文字 = \"%s\"", p.curToken.Literal)
 		p.nextToken()
-	} else if p.curToken != nil {
+	} else {
 		p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
 		p.nextToken()
-	} else {
-		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 	}
 	return nil
 }

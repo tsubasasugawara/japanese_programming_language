@@ -189,6 +189,12 @@ func evalIntegerExpression(opeKind ast.OperatorKind, left object.Object, right o
 		return &object.Boolean{Value: lval < rval}
 	case ast.GE:
 		return &object.Boolean{Value: lval <= rval}
+	case ast.RANGE:
+		array := &object.Array{Elements: []object.Object{}}
+		for i := lval; i < rval; i++ {
+			array.Elements = append(array.Elements, &object.Integer{Value: i})
+		}
+		return array
 	default:
 		return newError("対応していない演算子です")
 	}

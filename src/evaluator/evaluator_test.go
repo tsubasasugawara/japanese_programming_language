@@ -443,3 +443,47 @@ func TestLogicalOperators(t *testing.T) {
 		}
 	}
 }
+
+func TestGenList(t *testing.T) {
+	input := `
+	a = 1〜6
+	a[0]
+	a[1]
+	a[2]
+	a[3]
+	a[4]
+	`
+	head := lexer.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatal("Error\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v1 := Eval(program.Nodes[1], env)
+	v2 := Eval(program.Nodes[2], env)
+	v3 := Eval(program.Nodes[3], env)
+	v4 := Eval(program.Nodes[4], env)
+	v5 := Eval(program.Nodes[5], env)
+
+	if val := v1.Inspect(); val != "1" {
+		t.Fatalf("got=%s expect=1\n", val)
+	}
+
+	if val := v2.Inspect(); val != "2" {
+		t.Fatalf("got=%s expect=2\n", val)
+	}
+
+	if val := v3.Inspect(); val != "3" {
+		t.Fatalf("got=%s expect=3\n", val)
+	}
+
+	if val := v4.Inspect(); val != "4" {
+		t.Fatalf("got=%s expect=4\n", val)
+	}
+
+	if val := v5.Inspect(); val != "5" {
+		t.Fatalf("got=%s expect=5\n", val)
+	}
+}

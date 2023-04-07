@@ -39,6 +39,7 @@ const (
 	MA // MINUS(SUB)+ASSIGN
 	SA // SLASH(DIV)+ASSIGN
 	AA // ASTERISK(MUL)+ASSIGN
+	RANGE // 配列を生成する演算子
 )
 
 // expressions
