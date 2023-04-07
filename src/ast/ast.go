@@ -137,6 +137,12 @@ type (
 		Body *BlockStmt
 	}
 
+	ForEachStmt struct {
+		Token *token.Token
+		Array Expr
+		Body *BlockStmt
+	}
+
 	FuncStmt struct {
 		Token *token.Token
 		Name string
@@ -150,6 +156,7 @@ func (r *ReturnStmt) stmtNode() {}
 func (b *BlockStmt) stmtNode() {}
 func (i *IfStmt) stmtNode() {}
 func (f *ForStmt) stmtNode() {}
+func (f *ForEachStmt) stmtNode() {}
 func (f *FuncStmt) stmtNode() {}
 
 func (e *ExprStmt) Literal() string { return e.Expr.Literal() }
@@ -157,4 +164,5 @@ func (r *ReturnStmt) Literal() string { return r.Token.Literal }
 func (b *BlockStmt) Literal() string { return b.Token.Literal }
 func (i *IfStmt) Literal() string { return i.Token.Literal }
 func (f *ForStmt) Literal() string { return f.Token.Literal }
+func (f *ForEachStmt) Literal() string { return f.Token.Literal }
 func (f *FuncStmt) Literal() string { return f.Token.Literal }

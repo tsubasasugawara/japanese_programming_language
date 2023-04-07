@@ -77,11 +77,15 @@ func (p *Parser) stmt() ast.Stmt {
 		return &ast.ExprStmt{Expr: nil}
 	}
 
+	if p.expect(token.FOREACH) {
+		return p.parseForEachStmt(node)
+	}
+
 	p.expect(token.THEN)
 	if p.expect(token.FOR) {
 		return p.parseForStmt(node)
 	}
-
+	
 	if p.expect(token.RETURN) {
 		return &ast.ReturnStmt{Token: p.curToken, Value: node}
 	}
@@ -371,6 +375,10 @@ func (p *Parser) parseBlockStmt() *ast.BlockStmt {
 
 func (p *Parser) parseForStmt(node ast.Expr) *ast.ForStmt {
 	return &ast.ForStmt{Token: p.curToken, Condition: node, Body: p.parseBlockStmt()}
+}
+
+func (p *Parser) parseForEachStmt(node ast.Expr) *ast.ForEachStmt {
+	return &ast.ForEachStmt{Token: p.curToken, Array: node, Body: p.parseBlockStmt()}
 }
 
 func (p *Parser) parseParen() ast.Expr {

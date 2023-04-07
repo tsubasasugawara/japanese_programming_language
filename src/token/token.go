@@ -48,6 +48,8 @@ const (
 	ELSE
 	THEN
 	FOR
+	EACH
+	FOREACH
 	FUNC
 	TRUE
 	FALSE
@@ -63,6 +65,7 @@ var Keywords = map[string]TokenKind{
 	"ならば" : THEN,
 	"繰り返す" : FOR,
 	"ならば繰り返す" : FOR,
+	"それぞれ繰り返す" : FOREACH,
 	"関数" : FUNC,
 	"真" : TRUE,
 	"偽" : FALSE,

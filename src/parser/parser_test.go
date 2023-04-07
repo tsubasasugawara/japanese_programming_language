@@ -255,7 +255,7 @@ func TestIfStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.IfStmt. got=%T", program.Nodes[0])
 	}
 
-	if !testInfixExpr(t, node.Condition, int64(5), ast.EQ, int64(5)) {
+	if !testInfixExpr(t, node.Condition, 5, ast.EQ, 5) {
 		return
 	}
 
@@ -272,7 +272,7 @@ func TestIfStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
 	}
 
-	if !testInfixExpr(t, con.Expr, int64(10), ast.ADD, int64(10)) {
+	if !testInfixExpr(t, con.Expr, 10, ast.ADD, 10) {
 		return
 	}
 
@@ -291,7 +291,7 @@ func TestIfElseStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.IfStmt. got=%T", program.Nodes[0])
 	}
 
-	if !testInfixExpr(t, node.Condition, int64(5), ast.EQ, int64(5)) {
+	if !testInfixExpr(t, node.Condition, 5, ast.EQ, 5) {
 		return
 	}
 
@@ -308,7 +308,7 @@ func TestIfElseStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
 	}
 
-	if !testInfixExpr(t, con.Expr, int64(10), ast.ADD, int64(10)) {
+	if !testInfixExpr(t, con.Expr, 10, ast.ADD, 10) {
 		return
 	}
 
@@ -325,7 +325,7 @@ func TestIfElseStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Else.List[0])
 	}
 
-	if !testInfixExpr(t, alter.Expr, int64(15), ast.SUB, int64(5)) {
+	if !testInfixExpr(t, alter.Expr, 15, ast.SUB, 5) {
 		return
 	}
 }
@@ -343,7 +343,7 @@ func TestForStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.ForStmt. got=%T", program.Nodes[1])
 	}
 
-	if !testInfixExpr(t, node.Condition, "a", ast.GT, int64(5)) {
+	if !testInfixExpr(t, node.Condition, "a", ast.GT, 5) {
 		return
 	}
 
@@ -360,7 +360,7 @@ func TestForStatement(t *testing.T) {
 		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
 	}
 
-	if !testInfixExpr(t, body.Expr, "a", ast.ASSIGN, int64(1)) {
+	if !testInfixExpr(t, body.Expr, "a", ast.ASSIGN, 1) {
 		return
 	}
 }
@@ -704,6 +704,40 @@ func TestGenList(t *testing.T) {
 	}
 
 	if !testInfixExpr(t, node, 5, ast.RANGE, 9) {
+		return
+	}
+}
+
+func TestForEachStatement(t *testing.T) {
+	input := `
+	0〜100 それぞれ繰り返す {a = 1}
+	`
+	head := lexer.Tokenize(input)
+	program, _ := Parse(head)
+
+	node, ok := program.Nodes[0].(*ast.ForEachStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ForEachStmt. got=%T", program.Nodes[1])
+	}
+
+	if !testInfixExpr(t, node.Array, 0, ast.RANGE, 100) {
+		return
+	}
+
+	if node.Body == nil {
+		t.Fatalf("node.Body is nil.")
+	}
+
+	if len(node.Body.List) != 1 {
+		t.Errorf("node.Body.List is not 1 statement. got=%d", len(node.Body.List))
+	}
+
+	body, ok := node.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("This is not *ast.ExprStmt. got=%T", node.Body.List[0])
+	}
+
+	if !testInfixExpr(t, body.Expr, "a", ast.ASSIGN, 1) {
 		return
 	}
 }

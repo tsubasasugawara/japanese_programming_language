@@ -296,6 +296,29 @@ func evalForStatement(node ast.Node, env *object.Environment) object.Object {
 	}
 }
 
+func evalForEachStatement(node ast.Node, env *object.Environment) object.Object {
+	stmt := node.(*ast.ForEachStmt)
+	array := Eval(stmt.Array, env)
+	if array.Type() != object.ARRAY {
+		return newError("配列が必要です。")
+	}
+
+	var res object.Object = NULL
+	forEachEnv := object.NewEnclosedEnvironment(env)
+	for i, ele := range array.(*object.Array).Elements {
+		forEachEnv.Set("添字", &object.Integer{Value: int64(i)})
+		forEachEnv.Set("要素", ele)
+
+		res = Eval(stmt.Body, forEachEnv)
+	}
+
+	if res.Type() == object.ERROR {
+		return res
+	} else {
+		return NULL
+	}
+}
+
 func evalBlock(node ast.Node, env *object.Environment) object.Object {
 	var res object.Object
 	blockEnv := object.NewEnclosedEnvironment(env)
@@ -409,6 +432,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIfStatement(node, env)
 	case *ast.ForStmt:
 		return evalForStatement(node, env)
+	case *ast.ForEachStmt:
+		return evalForEachStatement(node, env)
 	case *ast.BlockStmt:
 		return evalBlock(node, env)
 	case *ast.FuncStmt:

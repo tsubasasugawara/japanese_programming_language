@@ -487,3 +487,51 @@ func TestGenList(t *testing.T) {
 		t.Fatalf("got=%s expect=5\n", val)
 	}
 }
+
+func TestForEachStatement(t *testing.T) {
+	input := `
+	a = 0〜5
+	a それぞれ繰り返す {
+		a[添字] = 要素＋要素
+	}
+	a[0]
+	a[1]
+	a[2]
+	a[3]
+	a[4]
+	`
+	head := lexer.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error,\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	Eval(program.Nodes[1], env)
+	v1 := Eval(program.Nodes[2], env)
+	v2 := Eval(program.Nodes[3], env)
+	v3 := Eval(program.Nodes[4], env)
+	v4 := Eval(program.Nodes[5], env)
+	v5 := Eval(program.Nodes[6], env)
+
+	if val := v1.Inspect(); val != "0" {
+		t.Fatalf("got=%s expect=0\n", val)
+	}
+
+	if val := v2.Inspect(); val != "2" {
+		t.Fatalf("got=%s expect=2\n", val)
+	}
+
+	if val := v3.Inspect(); val != "4" {
+		t.Fatalf("got=%s expect=4\n", val)
+	}
+
+	if val := v4.Inspect(); val != "6" {
+		t.Fatalf("got=%s expect=6\n", val)
+	}
+
+	if val := v5.Inspect(); val != "8" {
+		t.Fatalf("got=%s expect=8\n", val)
+	}
+}

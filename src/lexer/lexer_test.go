@@ -6,71 +6,6 @@ import (
 	"jpl/token"
 )
 
-func tokenKindToString(kind token.TokenKind) string {
-	var res string
-	switch kind {
-	case token.PLUS:
-		res = "PLUS"
-	case token.MINUS:
-		res = "MINUS"
-	case token.ASTERISK:
-		res = "ASTERISK"
-	case token.SLASH:
-		res = "SLASH"
-	case token.CALET:
-		res = "CALET"
-	case token.PA:
-		res = "PLUS+ASSIGN"
-	case token.MA:
-		res = "MINUS+ASSIGN"
-	case token.AA:
-		res = "ASTERISK+ASSIGN"
-	case token.SA:
-		res = "SLASH+ASSIGN"
-	case token.INTEGER:
-		res = "INTEGER"
-	case token.LPAREN:
-		res = "LPAREN"
-	case token.RPAREN:
-		res = "RPAREN"
-	case token.LBRACE:
-		res = "LBRACE"
-	case token.RBRACE:
-		res ="RBRACE"
-	case token.L_SQUARE_BRACE:
-		res = "L_SQUARE_BRACE"
-	case token.R_SQUARE_BRACE:
-		res = "R_SQUARE_BRACE"
-	case token.ASSIGN:
-		res = "ASSIGN"
-	case token.EQ:
-		res = "EQ"
-	case token.NOT_EQ:
-		res = "NOT_EQ"
-	case token.GT:
-		res = "GT"
-	case token.GE:
-		res = "GE"
-	case token.LT:
-		res = "LT"
-	case token.LE:
-		res = "LE"
-	case token.EOF:
-		res = "EOF"
-	case token.IDENT:
-		res = "IDENT"
-	case token.COMMA:
-		res = "COMMA"
-	case token.TRUE:
-		res = "TRUE"
-	case token.FALSE:
-		res = "FALSE"
-	default:
-		res = "ILLEGAL"
-	}
-	return res
-}
-
 func TestToken(t *testing.T) {
 	input := `
 	+ ＋  - ー * ＊ × / ／ ÷ 　
@@ -86,8 +21,9 @@ func TestToken(t *testing.T) {
 	真 偽 
 	&& ＆＆ かつ 
 	|| ｜｜ または 
-	!　！　ではない
+	!　！　ではない 
 	~ 〜
+	それぞれ繰り返す
 	`
 
 	tests := []struct {
@@ -176,13 +112,14 @@ func TestToken(t *testing.T) {
 		{token.NOT, "ではない"},
 		{token.RANGE, "~"},
 		{token.RANGE, "〜"},
+		{token.FOREACH, "それぞれ繰り返す"},
 		{token.EOF, ""},
 	}
 
 	head := Tokenize(input)
 	for i, v := range tests {
 		if head.Kind != v.expectedTokenKind {
-			t.Fatalf("test%d : got=%s expected=%s\n", i, tokenKindToString(head.Kind), tokenKindToString(v.expectedTokenKind))
+			t.Fatalf("test%d : got=%d expected=%d\n", i, head.Kind, v.expectedTokenKind)
 		}
 
 		if head.Literal != v.expectedLiteral {
