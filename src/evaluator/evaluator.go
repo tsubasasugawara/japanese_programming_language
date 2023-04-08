@@ -306,8 +306,8 @@ func evalForEachStatement(node ast.Node, env *object.Environment) object.Object 
 	var res object.Object = NULL
 	forEachEnv := object.NewEnclosedEnvironment(env)
 	for i, ele := range array.(*object.Array).Elements {
-		forEachEnv.Set("添字", &object.Integer{Value: int64(i)})
-		forEachEnv.Set("要素", ele)
+		forEachEnv.SetCurrentEnv("添字", &object.Integer{Value: int64(i)})
+		forEachEnv.SetCurrentEnv("要素", ele)
 
 		res = Eval(stmt.Body, forEachEnv)
 	}

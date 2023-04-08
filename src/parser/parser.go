@@ -503,8 +503,12 @@ func (p *Parser) parseListElements() *ast.ArrayExpr {
 		return nil
 	}
 
+	if p.expect(token.RBRACE) {
+		return array
+	}
+
 	expr := p.expr()
-	if expr == nil {
+	if expr != nil {
 		return nil
 	}
 
