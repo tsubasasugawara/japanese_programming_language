@@ -4,6 +4,7 @@ type TokenKind int
 
 const (
 	INTEGER TokenKind = iota
+	STRING
 
 	IDENT //識別子
 
@@ -38,6 +39,8 @@ const (
 	RBRACE // }, ｝
 	L_SQUARE_BRACE // [
 	R_SQUARE_BRACE // ],
+
+	DOUBLE_QUOTES // ", ”
 
 	COMMA //, 、
 

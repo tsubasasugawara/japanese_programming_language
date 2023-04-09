@@ -18,6 +18,7 @@ const (
 	RETURN_VALUE = "RETURN_VALUE"
 	FUNCTION = "FUNCTION"
 	BUILTIN = "BUILTIN"
+	STRING = "STRING"
 )
 
 type BuiltinFunction func(args ...Object) Object
@@ -44,6 +45,10 @@ type (
 		Value bool
 	}
 
+	String struct {
+		Value []rune
+	}
+
 	Null struct {}
 
 	ReturnValue struct {
@@ -64,6 +69,7 @@ func (e *Error) Type() ObjectType { return ERROR }
 func (a *Array) Type() ObjectType { return ARRAY }
 func (i *Integer) Type() ObjectType { return INTEGER }
 func (b *Boolean) Type() ObjectType { return BOOLEAN }
+func (s *String) Type() ObjectType { return STRING}
 func (n *Null) Type() ObjectType { return NULL }
 func (r *ReturnValue) Type() ObjectType { return RETURN_VALUE }
 func (f *Function) Type() ObjectType { return FUNCTION }
@@ -80,6 +86,7 @@ func (a *Array) Inspect() string {
 }
 func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
 func (b *Boolean) Inspect() string { return fmt.Sprintf("%t", b.Value) }
+func (s *String) Inspect() string { return fmt.Sprintf("%s", string(s.Value)) }
 func (n *Null) Inspect() string { return fmt.Sprintf("null") }
 func (r *ReturnValue) Inspect() string { return r.Value.Inspect() }
 func (f *Function) Inspect() string {

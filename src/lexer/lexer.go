@@ -84,7 +84,7 @@ func (l *Lexer) readNum() string {
 	return string(l.input[position:l.position])
 }
 
-func (l *Lexer) readString() string {
+func (l *Lexer) readIdentifier() string {
 	position := l.position
 	if !isAlphabet(l.ch) && !isJapanese(l.ch) {
 		return ""
@@ -220,6 +220,19 @@ func Tokenize(input string) *token.Token {
 			} else {
 				cur = token.NewToken(token.ILLEGAL, cur, string(l.ch))
 			}
+		case '"', '”':
+			cur = token.NewToken(token.DOUBLE_QUOTES, cur , string(l.ch))
+			l.readChar()
+
+			position := l.position
+			for l.ch != '"' && l.ch != '”' && l.ch != 0 {
+				l.readChar()
+			}
+			cur = token.NewToken(token.STRING, cur, string(l.input[position:l.position]))
+
+			if l.ch == '"' || l.ch == '”' {
+				cur = token.NewToken(token.DOUBLE_QUOTES, cur, string(l.ch))
+			}
 		case 0:
 			cur = token.NewToken(token.EOF, cur, "")
 		default:
@@ -227,7 +240,7 @@ func Tokenize(input string) *token.Token {
 				cur = token.NewIntegerToken(cur, l.readNum())
 				continue
 			} else if isJapanese(l.ch) || isAlphabet(l.ch) {
-				str := l.readString()
+				str := l.readIdentifier()
 				kind := token.LookUpIdent(str)
 				cur = token.NewToken(kind, cur, str)
 				continue

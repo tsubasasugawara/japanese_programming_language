@@ -24,6 +24,8 @@ func TestToken(t *testing.T) {
 	!　！　ではない 
 	~ 〜
 	それぞれ繰り返す
+	"abcあいう世界"
+	”abcあいう世界”
 	`
 
 	tests := []struct {
@@ -113,6 +115,12 @@ func TestToken(t *testing.T) {
 		{token.RANGE, "~"},
 		{token.RANGE, "〜"},
 		{token.FOREACH, "それぞれ繰り返す"},
+		{token.DOUBLE_QUOTES, "\""},
+		{token.STRING, "abcあいう世界"},
+		{token.DOUBLE_QUOTES, "\""},
+		{token.DOUBLE_QUOTES, "”"},
+		{token.STRING, "abcあいう世界"},
+		{token.DOUBLE_QUOTES, "”"},
 		{token.EOF, ""},
 	}
 

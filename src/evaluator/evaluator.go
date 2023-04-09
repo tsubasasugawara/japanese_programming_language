@@ -418,6 +418,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Integer{Value: node.(*ast.Integer).Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.(*ast.Boolean).Value}
+	case *ast.String:
+		return &object.String{Value: node.(*ast.String).Value}
 	case *ast.CallExpr:
 		return evalCallFunc(node, env)
 	case *ast.ArrayExpr:

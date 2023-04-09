@@ -741,3 +741,20 @@ func TestForEachStatement(t *testing.T) {
 		return
 	}
 }
+
+func TestString(t *testing.T) {
+	input := `
+	"こんにちは、世界"
+	`
+	head := lexer.Tokenize(input)
+	program, _ := Parse(head)
+
+	node, ok := program.Nodes[0].(*ast.ExprStmt).Expr.(*ast.String)
+	if !ok {
+		t.Fatalf("node is not *ast.String. got=%T", program.Nodes[0].(*ast.ExprStmt).Expr)
+	}
+
+	if string(node.Value) != "こんにちは、世界" {
+		t.Fatalf("node.Value is not \"こんにちは、世界\". got=%s", string(node.Value))
+	}
+}

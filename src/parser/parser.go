@@ -236,6 +236,10 @@ func (p *Parser) primary() ast.Expr {
 		return p.parseListElements()
 	}
 
+	if p.expect(token.DOUBLE_QUOTES) {
+		return p.parseString()
+	}
+
 	if p.curToken == nil {
 		p.error(ast.UNEXPECTED_TOKEN, "式が必要です。")
 	}
@@ -400,7 +404,11 @@ func (p *Parser) parseParen() ast.Expr {
 
 	expressions = append(expressions, expr)
 	for p.expect(token.COMMA) {
-		expressions  = append(expressions, p.expr())
+		e := p.expr()
+		if e == nil {
+			return nil
+		}
+		expressions  = append(expressions, e)
 	}
 
 	if p.curTokenIs(token.EOF) {
@@ -439,6 +447,16 @@ func (p *Parser) parseBoolean() *ast.Boolean {
 		node.Value = true
 	}
 	p.nextToken()
+	return node
+}
+
+func (p *Parser) parseString() *ast.String {
+	node := &ast.String{Token: p.curToken, Value: []rune(p.curToken.Literal)}
+	p.nextToken()
+	if !p.expect(token.DOUBLE_QUOTES) {
+		p.error(ast.MISSING_DOUBLE_QOUTES, "引用符が閉じられていません。")
+		return nil
+	}
 	return node
 }
 
@@ -508,7 +526,7 @@ func (p *Parser) parseListElements() *ast.ArrayExpr {
 	}
 
 	expr := p.expr()
-	if expr != nil {
+	if expr == nil {
 		return nil
 	}
 

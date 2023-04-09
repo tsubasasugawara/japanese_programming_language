@@ -535,3 +535,23 @@ func TestForEachStatement(t *testing.T) {
 		t.Fatalf("got=%s expect=8\n", val)
 	}
 }
+
+func TestString(t *testing.T) {
+	input := `
+	a = "こんにちは、世界"
+	a
+	`
+	head := lexer.Tokenize(input)
+	program, errors := parser.Parse(head)
+	if len(errors) > 0 {
+		t.Fatalf("Error,\n")
+	}
+
+	env := object.NewEnvironment()
+	Eval(program.Nodes[0], env)
+	v := Eval(program.Nodes[1], env)
+
+	if val := v.Inspect(); val != "こんにちは、世界" {
+		t.Fatalf("got=%s expect=こんにちは、世界", val)
+	}
+}
