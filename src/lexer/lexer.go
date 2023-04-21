@@ -206,6 +206,8 @@ func Tokenize(input string) *token.Token {
 			}
 		case ',', '、', '，':
 			cur = token.NewToken(token.COMMA, cur, string(l.ch))
+		case '.', '．':
+			cur = token.NewToken(token.POINT, cur, string(l.ch))
 		case '&', '＆':
 			if ch := l.peekChar(); ch == '&' || ch == '＆' {
 				cur = token.NewToken(token.AND, cur, string([]rune{l.ch, ch}))

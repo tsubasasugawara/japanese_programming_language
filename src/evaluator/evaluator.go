@@ -114,6 +114,8 @@ func evalInfixExpr(node ast.Node, env *object.Environment) object.Object {
 	switch right.(type) {
 	case *object.Integer:
 		return evalIntegerExpression(expr.Operator, left, right)
+	case *object.Float:
+		return evalFloatExpression(expr.Operator, left, right)
 	case *object.Boolean:
 		return evalBooleanExpression(expr.Operator, left, right)
 	}
@@ -195,6 +197,38 @@ func evalIntegerExpression(opeKind ast.OperatorKind, left object.Object, right o
 			array.Elements = append(array.Elements, &object.Integer{Value: i})
 		}
 		return array
+	default:
+		return newError("対応していない演算子です")
+	}
+}
+
+func evalFloatExpression(opeKind ast.OperatorKind, left object.Object, right object.Object) object.Object {
+	if left.Type() != object.FLOAT || right.Type() != object.FLOAT {
+		return newError("異なる型での演算は出来ません。 左オペランド:%s 右オペランド:%s", left.Type(), right.Type())
+	}
+
+	lval := left.(*object.Float).Value
+	rval := right.(*object.Float).Value
+
+	switch opeKind {
+	case ast.ADD, ast.PA:
+		return &object.Float{Value: lval + rval}
+	case ast.SUB, ast.MA:
+		return &object.Float{Value: lval - rval}
+	case ast.MUL, ast.AA:
+		return &object.Float{Value: lval * rval}
+	case ast.DIV, ast.SA:
+		return &object.Float{Value: lval / rval}
+	case ast.EXPONENT:
+		return &object.Float{Value: math.Pow(lval, rval)}
+	case ast.EQ:
+		return &object.Boolean{Value: lval == rval}
+	case ast.NOT_EQ:
+		return &object.Boolean{Value: lval != rval}
+	case ast.GT:
+		return &object.Boolean{Value: lval < rval}
+	case ast.GE:
+		return &object.Boolean{Value: lval <= rval}
 	default:
 		return newError("対応していない演算子です")
 	}
@@ -416,6 +450,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIdent(node, env)
 	case *ast.Integer:
 		return &object.Integer{Value: node.(*ast.Integer).Value}
+	case *ast.Float:
+		return &object.Float{Value: node.(*ast.Float).Integer + node.(*ast.Float).Fraction}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.(*ast.Boolean).Value}
 	case *ast.String:

@@ -41,6 +41,8 @@ func testLiteral(t *testing.T, expr ast.Expr, expected interface{}) bool {
 		return testInteger(t, expr, int64(v))
 	case int:
 		return testInteger(t, expr, int64(v))
+	case float64:
+		return testFloat(t, expr, float64(v))
 	case string:
 		return testIdentifier(t, expr, string(v))
 	case bool:
@@ -59,6 +61,21 @@ func testInteger(t *testing.T, intExpr ast.Expr, value int64) bool {
 
 	if integ.Value != value {
 		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+		return false
+	}
+
+	return true
+}
+
+func testFloat(t *testing.T, expr ast.Expr, value float64) bool {
+	float, ok := expr.(*ast.Float)
+	if !ok {
+		t.Errorf("This is not *ast.Float. got=%T", expr)
+		return false
+	}
+
+	if float.Integer + float.Fraction != value {
+		t.Errorf("float.Integer + float.Fraction is not %f. got=%f", value, float.Integer + float.Fraction)
 		return false
 	}
 
@@ -756,5 +773,31 @@ func TestString(t *testing.T) {
 
 	if string(node.Value) != "こんにちは、世界" {
 		t.Fatalf("node.Value is not \"こんにちは、世界\". got=%s", string(node.Value))
+	}
+}
+
+func TestFloat(t *testing.T) {
+	tests := []struct {
+		input string
+		expect float64
+	} {
+		{"1.25", 1.25},
+		{"1．25", 1.25},
+	}
+
+	for _, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, _ := Parse(head)
+
+		for _, n := range program.Nodes {
+			node, ok := n.(*ast.ExprStmt).Expr.(*ast.Float)
+			if !ok {
+				t.Fatalf("node is not *ast.Float. got=%T", n.(*ast.ExprStmt).Expr)
+			}
+
+			if !testLiteral(t, node, v.expect) {
+				return
+			}
+		}
 	}
 }

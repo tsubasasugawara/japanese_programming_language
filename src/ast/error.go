@@ -10,7 +10,7 @@ const (
 	MISSING_RBRACE 						= "括弧が閉じていません"
 	MISSING_R_SQUARE_BRACE				= "括弧が閉じていません"
 	MISSING_FUNCTION_NAME 				= "関数名が指定されていません"
-	MISSING_DOUBLE_QOUTES				="引用符(\", ”)が閉じられていません"
+	MISSING_DOUBLE_QOUTES				= "引用符(\", ”)が閉じられていません"
 
 	UNEXPECTED_TOKEN					= "予期しないトークンがあります"
 	ILLEGAL_CHARACTER					= "対応していない文字が含まれています"

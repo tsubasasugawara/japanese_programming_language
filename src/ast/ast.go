@@ -65,6 +65,12 @@ type (
 		Value int64
 	}
 
+	Float struct {
+		Token *token.Token
+		Integer float64
+		Fraction float64
+	}
+
 	String struct {
 		Token *token.Token
 		Value []rune
@@ -99,6 +105,7 @@ func (i *Ident) exprNode() {}
 func (a *ArrayExpr) exprNode() {}
 func (i *IndexExpr) exprNode() {}
 func (i *Integer) exprNode() {}
+func (f *Float) exprNode() {}
 func (s *String) exprNode() {}
 func (b *Boolean) exprNode() {}
 func (p *PrefixExpr) exprNode() {}
@@ -109,6 +116,7 @@ func (i *Ident) Literal() string { return i.Token.Literal }
 func (a *ArrayExpr) Literal() string { return a.Token.Literal }
 func (i *IndexExpr) Literal() string { return i.Token.Literal }
 func (i *Integer) Literal() string { return i.Token.Literal }
+func (f *Float) Literal() string { return f.Token.Literal }
 func (s *String) Literal() string { return s.Token.Literal }
 func (b *Boolean) Literal() string { return b.Token.Literal }
 func (p *PrefixExpr) Literal() string { return p.Token.Literal }

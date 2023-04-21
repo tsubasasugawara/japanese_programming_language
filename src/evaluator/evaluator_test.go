@@ -9,7 +9,7 @@ import (
 	"jpl/object"
 )
 
-func TestCalc(t *testing.T) {
+func TestCalcInteger(t *testing.T) {
 	tests := []struct {
 		input string
 		expectNum int64
@@ -39,6 +39,33 @@ func TestCalc(t *testing.T) {
 		o := Eval(program.Nodes[0], env)
 		if val := o.(*object.Integer).Value; val != v.expectNum {
 			t.Fatalf("test%d : got=%d expect=%d", i, val, v.expectNum)
+		}
+	}
+}
+
+func TestCalcFloat(t *testing.T) {
+	tests := []struct {
+		input string
+		expectNum float64
+	} {
+		{"2.5 + 2.5", 5.0},
+		{"3.5 - 1.2", 2.3},
+		{"2.4 * 1.7", 4.08},
+		{"5.5 ÷ 5.0", 1.1},
+		{"3.5^4.0", 150.0625},
+	}
+
+	for i, v := range tests {
+		head := lexer.Tokenize(v.input)
+		program, errors := parser.Parse(head)
+		if len(errors) > 0 {
+			t.Fatalf("Error.\n")
+		}
+
+		env := object.NewEnvironment()
+		o := Eval(program.Nodes[0], env)
+		if val := o.(*object.Float).Value; val != v.expectNum {
+			t.Fatalf("test%d : got=%+v expect=%+v", i, val, v.expectNum)
 		}
 	}
 }

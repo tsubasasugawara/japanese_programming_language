@@ -26,6 +26,7 @@ func TestToken(t *testing.T) {
 	それぞれ繰り返す
 	"abcあいう世界"
 	”abcあいう世界”
+	. ．
 	`
 
 	tests := []struct {
@@ -121,6 +122,8 @@ func TestToken(t *testing.T) {
 		{token.DOUBLE_QUOTES, "”"},
 		{token.STRING, "abcあいう世界"},
 		{token.DOUBLE_QUOTES, "”"},
+		{token.POINT, "."},
+		{token.POINT, "．"},
 		{token.EOF, ""},
 	}
 

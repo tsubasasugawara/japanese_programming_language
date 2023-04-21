@@ -19,6 +19,7 @@ const (
 	FUNCTION = "FUNCTION"
 	BUILTIN = "BUILTIN"
 	STRING = "STRING"
+	FLOAT = "FLOAT"
 )
 
 type BuiltinFunction func(args ...Object) Object
@@ -39,6 +40,10 @@ type (
 
 	Integer struct {
 		Value int64
+	}
+
+	Float struct {
+		Value float64
 	}
 
 	Boolean struct {
@@ -68,6 +73,7 @@ type (
 func (e *Error) Type() ObjectType { return ERROR }
 func (a *Array) Type() ObjectType { return ARRAY }
 func (i *Integer) Type() ObjectType { return INTEGER }
+func (f *Float) Type() ObjectType { return FLOAT}
 func (b *Boolean) Type() ObjectType { return BOOLEAN }
 func (s *String) Type() ObjectType { return STRING}
 func (n *Null) Type() ObjectType { return NULL }
@@ -85,6 +91,7 @@ func (a *Array) Inspect() string {
 	return fmt.Sprintf("{" + strings.Join(elements, ",") + "}")
 }
 func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
+func (f *Float) Inspect() string { return fmt.Sprintf("%+v", f.Value) }
 func (b *Boolean) Inspect() string { return fmt.Sprintf("%t", b.Value) }
 func (s *String) Inspect() string { return fmt.Sprintf("%s", string(s.Value)) }
 func (n *Null) Inspect() string { return fmt.Sprintf("null") }

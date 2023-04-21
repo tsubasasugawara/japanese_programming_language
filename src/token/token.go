@@ -43,6 +43,7 @@ const (
 	DOUBLE_QUOTES // ", ”
 
 	COMMA //, 、
+	POINT //. ．
 
 	RANGE //~, 〜
 

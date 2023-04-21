@@ -41,6 +41,10 @@ func (p *Parser) curTokenIs(tokenKind token.TokenKind) bool {
 	return p.curToken != nil && p.curToken.Kind == tokenKind
 }
 
+func (p *Parser) peekTokenIs(tokenKind token.TokenKind) bool {
+	return p.curToken != nil && p.curToken.Next != nil && p.curToken.Next.Kind == tokenKind
+}
+
 func (p *Parser) expect(tokenKind token.TokenKind) bool {
 	if p.curTokenIs(tokenKind) {
 		p.nextToken()
@@ -246,7 +250,11 @@ func (p *Parser) primary() ast.Expr {
 
 	switch p.curToken.Kind {
 	case token.INTEGER:
-		return p.parseInteger()
+		if p.peekTokenIs(token.POINT) {
+			return p.parseFloat()
+		} else {
+			return p.parseInteger()
+		}
 	case token.TRUE, token.FALSE:
 		return p.parseBoolean()
 	}
@@ -438,6 +446,22 @@ func (p *Parser) parseInteger() *ast.Integer {
 	num, _ := strconv.ParseInt(str, 10, 64)
 	node := &ast.Integer{Token: p.curToken, Value: num}
 	p.nextToken()
+	return node
+}
+
+func (p *Parser) parseFloat() *ast.Float {
+	node := &ast.Float{Token: p.curToken}
+
+	intStr := utils.ToLower(p.curToken.Literal)
+	p.nextToken()
+	if !p.expect(token.POINT) {
+		p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
+	}
+	floatStr := "0." + utils.ToLower(p.curToken.Literal)
+	p.nextToken()
+
+	node.Integer, _ = strconv.ParseFloat(intStr, 64)
+	node.Fraction, _ = strconv.ParseFloat(floatStr, 64)
 	return node
 }
 
