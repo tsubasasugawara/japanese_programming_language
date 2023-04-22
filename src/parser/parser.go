@@ -457,11 +457,10 @@ func (p *Parser) parseFloat() *ast.Float {
 	if !p.expect(token.POINT) {
 		p.error(ast.UNEXPECTED_TOKEN, "予期しない文字が検出されました。 取得した文字=%s", p.curToken.Literal)
 	}
-	floatStr := "0." + utils.ToLower(p.curToken.Literal)
+	floatStr := utils.ToLower(p.curToken.Literal)
 	p.nextToken()
 
-	node.Integer, _ = strconv.ParseFloat(intStr, 64)
-	node.Fraction, _ = strconv.ParseFloat(floatStr, 64)
+	node.Value, _ = strconv.ParseFloat(intStr + "." + floatStr, 64)
 	return node
 }
 

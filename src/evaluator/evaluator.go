@@ -451,7 +451,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.Integer:
 		return &object.Integer{Value: node.(*ast.Integer).Value}
 	case *ast.Float:
-		return &object.Float{Value: node.(*ast.Float).Integer + node.(*ast.Float).Fraction}
+		return &object.Float{Value: node.(*ast.Float).Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.(*ast.Boolean).Value}
 	case *ast.String:

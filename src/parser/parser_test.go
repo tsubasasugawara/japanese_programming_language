@@ -74,8 +74,8 @@ func testFloat(t *testing.T, expr ast.Expr, value float64) bool {
 		return false
 	}
 
-	if float.Integer + float.Fraction != value {
-		t.Errorf("float.Integer + float.Fraction is not %f. got=%f", value, float.Integer + float.Fraction)
+	if float.Value != value {
+		t.Errorf("float.Value is not %f. got=%f", value, float.Value)
 		return false
 	}
 

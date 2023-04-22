@@ -67,8 +67,7 @@ type (
 
 	Float struct {
 		Token *token.Token
-		Integer float64
-		Fraction float64
+		Value float64
 	}
 
 	String struct {
